@@ -18,7 +18,10 @@ Application build, run, and test commands will arrive with bootstrap. The propos
 
 ## Style and Naming
 
-Use lowercase, hyphen-separated change names such as `model-task-recovery`. Follow the existing proposal headings, including `Why`, `What Changes`, `Capabilities`, and `Impact`. Describe observable behavior and use numbered steps for acceptance scenarios.
+- Always read `DESIGN.md` before creating or modifying UI components, styles, or layouts.
+- Follow all color, typography, spacing, and component rules in `DESIGN.md`.
+- Reuse existing UI primitives before creating new ones.
+  Use lowercase, hyphen-separated change names such as `model-task-recovery`. Follow the existing proposal headings, including `Why`, `What Changes`, `Capabilities`, and `Impact`. Describe observable behavior and use numbered steps for acceptance scenarios.
 
 Use the [uncodixfy skill](.agents/skills/uncodixfy/SKILL.md) whenever creating or editing frontend UI.
 
