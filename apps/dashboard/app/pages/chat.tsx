@@ -6,13 +6,23 @@ type Props = { data:Schema["Workspace"]; token:string; onPreference:(format:stri
 
 export function Chat({data,token,onPreference,onSignOut}:Props) {
   const [panel,setPanel] = useState<"chat" | "files" | null>(() => window.matchMedia("(max-width: 760px)").matches ? null : "chat")
+  const [tasksOpen, setTasksOpen] = useState(false)
+  const [frontPanel, setFrontPanel] = useState<"sidebar" | "tasks">("sidebar")
+  function showSidebar(view: "chat" | "files") {
+    setPanel(view)
+    setFrontPanel("sidebar")
+  }
   const [draft,setDraft] = useState("")
   const [menu,setMenu]=useState(false)
   const [error,setError]=useState("")
-  return <main className="shell">
+  return <main className="shell" data-front={frontPanel}>
     <nav aria-label="Workspace"><strong>Cueia</strong>
-      <button aria-expanded={panel === "chat"} onClick={() => setPanel("chat")}>Chat</button>
-      <button aria-expanded={panel === "files"} onClick={() => setPanel("files")}>Files</button>
+      <button aria-expanded={panel === "chat"} onClick={() => showSidebar("chat")}>Chat</button>
+      <button aria-expanded={panel === "files"} onClick={() => showSidebar("files")}>Files</button>
+      <button aria-expanded={tasksOpen} onClick={() => {
+        setTasksOpen(!tasksOpen)
+        setFrontPanel("tasks")
+      }}>Tasks</button>
       <button aria-expanded={menu} onClick={()=>setMenu(!menu)}>Menu</button></nav>
     {menu && <aside className="menu"><h2>Preferences</h2><label>Time format <select value={data.preferences.timeFormat ?? "12h"} onChange={e=>onPreference(e.target.value).catch(()=>setError("Could not save preference."))}><option value="12h">12 hour</option><option value="24h">24 hour</option></select></label>
       <button onClick={()=>onSignOut().catch(()=>setError("Could not sign out. Please retry."))}>Sign out</button></aside>}
@@ -31,7 +41,14 @@ export function Chat({data,token,onPreference,onSignOut}:Props) {
       </div>
       <div className="composer"><label htmlFor="draft">Message</label>
         <textarea id="draft" rows={2} value={draft} placeholder="Write a message…" onChange={e => setDraft(e.target.value)} />
+        <small>Sending is unavailable until the agent connects.</small>
       </div>
     </section>
+    {tasksOpen && <aside className="tasks" aria-label="Tasks">
+      <div className="panel-heading"><h2>Tasks</h2><button aria-label="Close Tasks" onClick={() => setTasksOpen(false)}>×</button></div>
+      <p><strong>Cueia</strong> · Agent disconnected</p>
+      <section><h3>Scheduled tasks</h3><p>No scheduled tasks.</p></section>
+      <section><h3>Today's activity</h3><p>No activity yet.</p></section>
+    </aside>}
   </main>
 }

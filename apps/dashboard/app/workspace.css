@@ -23,3 +23,10 @@
   .feed,.conversation header {padding:1rem}
   .composer {margin:0 .5rem .5rem}
 }
+.tasks {border-right:0; border-left:1px solid #353732}
+.tasks h3 {font-size:1rem; margin:1rem 0 .5rem}
+.tasks p,.composer small {color:#bcc3b7}
+@media(max-width:760px) {
+  .tasks {left:auto; right:0}
+  .shell[data-front="sidebar"] .sidebar,.shell[data-front="tasks"] .tasks {z-index:3}
+}
