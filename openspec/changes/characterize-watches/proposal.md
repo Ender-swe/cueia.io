@@ -18,15 +18,18 @@ Create an owner-bound watch with target URL, condition and value, interval, link
 
 ### Scheduling and delivery
 
-Use the durable task scheduler to claim each due run. Save the new baseline and a recoverable alert intent for the same observation together. Identify delivery by watch and observation. A worker restarting after the baseline advances can finish publication. A replay finds the existing inbox item. Link the item to the observation, target, and watch. Persist the next eligible time so a restart cannot produce an extra scheduled check.
+Create the watch in the workspace resolved from the owner's session. The worker claims each due run through the durable task scheduler using the saved workspace and task IDs. A watch continues when its creator signs out. Tracking and the Tasks panel show the next check from the same saved schedule. [Bootstrap workspace access](../bootstrap/design.md#resolve-workspace-ownership-at-the-storage-boundary) · [Task scheduling](../model-task-recovery/proposal.md)
+
+Save the new baseline and a recoverable alert intent for the same observation together. Identify delivery by workspace, watch, and observation. Replacing a workspace VM preserves the baseline and pending delivery in PostgreSQL. A worker restarting after the baseline advances can finish publication. A replay finds the existing inbox item. Link the item to the observation, target, and watch. Persist the next eligible time so a restart cannot produce an extra scheduled check.
 
 Support check now, pause, resume, and stop from Tracking or Activity. A manual check shares the watch’s claim and must preserve a newer baseline if another run completes first. On failure retain the last successful baseline and visible error, increment consecutive failures, and delay the next attempt with increasing backoff. Pause after five consecutive failures and record the pause notification once for that streak. Resume clears the pause and permits a new streak. Stop is terminal. Check the current lifecycle version when applying late results so an overlapping check or resume cannot reactivate a stopped watch.
 
 ### Acceptance
 
-1. Serve a fictional price page through the fixture reader. Use a threshold of 50 and successive prices of 80, 40, 40, 80, and 40. Expect alert counts of 0, 1, 1, 1, and 2. Interrupt after saving the second observation and before publishing it. Restart, replay the run twice, and verify the two alerts link to the second and fifth observations.
+1. Serve a fictional price page through the fixture reader. Use a threshold of 50 and successive prices of 80, 40, 40, 80, and 40. Expect alert counts of 0, 1, 1, 1, and 2. Interrupt after saving the second observation and before publishing it. Restart, replay the run twice, and verify the two alerts link to the second and fifth observations. Have a second owner watch the same URL. Verify each workspace advances its own baseline and receives only its own alerts.
 2. With a fake clock, advance to each scheduled retry during five consecutive read failures. Verify increasing delays, a visible error, one pause notification, and zero scheduled reads while paused. Resume and complete one successful read. Pause and resume a second time and verify the baseline survives.
 3. Hold a page read in flight, stop the watch, then release the read and restart. Expect stopped state and no new alert or eligible run. Test a first read already containing the phrase, a repeated match with mixed case and whitespace, and a price equal to the limit. Verify initial, repeated, and boundary behavior independently.
+4. Create a watch from one of Alice's two sessions, then revoke that session. Verify its next private read returns 401. Advance the clock to a due check with a matching price. In Alice's other session, verify one alert opens the recorded observation and that Tracking and Scheduled tasks agree on the task ID and next check time. Bob's inbox receives no alert from Alice's watch.
 
 ## Capabilities
 

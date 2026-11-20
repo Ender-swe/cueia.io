@@ -2,23 +2,23 @@
 
 ## Purpose
 
-Preserve private workspace records and document bytes across restarts, and give the API and worker a consistent view of each deployment's data.
+Preserve each person's private workspace VM filesystem, records, and document identities across restarts so the owner and their agents can reopen the same files.
 
 ## ADDED Requirements
 
 ### Requirement: One workspace per verified user
 
-The system SHALL create the user and their private workspace atomically. Every user SHALL have one unique Clerk user ID and one unique workspace reference. Concurrent first sign-ins for the same subject SHALL resolve to one committed workspace.
+The system SHALL create the user and their private workspace atomically. Each user SHALL have one unique Clerk subject and one unique workspace reference per deployment. Each workspace SHALL have a dedicated cloud VM with a persistent filesystem. Concurrent sign-ins and retries SHALL converge on that allocation before the workspace becomes available.
 
 #### Scenario: First sign-ins arrive together
 
 1. **WHEN** two first sign-ins for Alice's Clerk subject arrive concurrently
-2. **THEN** both succeed with the same workspace ID, and storage contains one user for that subject and one associated workspace.
+2. **THEN** both succeed with separate sessions for the same workspace and the deployment contains one user, one workspace, one VM, and one attached workspace disk for Alice.
 
 #### Scenario: Provisioning is interrupted
 
-1. **WHEN** initial workspace creation fails before commit and the owner signs in again
-2. **THEN** the retry opens one complete workspace, with no extra workspace or partially provisioned user left by the failed attempt.
+1. **WHEN** initial provisioning fails before the user transaction commits, or the provider creates the VM but the caller stops before recording the result, and the owner signs in again
+2. **THEN** the retry opens one complete workspace on a single VM and disk, and no session observes a partial seed set.
 
 ### Requirement: Private sample records and separate live data
 
@@ -34,25 +34,36 @@ Each new sample workspace SHALL receive one fictional mailbox thread, its fillab
 #### Scenario: Same person enters live mode
 
 1. **WHEN** a person who has used sample mode opens a new live workspace
-2. **THEN** the live workspace contains neither the sample fixtures nor changes made in that person's sample workspace.
+2. **THEN** the live workspace has a separate VM and disk and contains neither the sample fixtures nor files or preferences created in sample mode.
+
+### Requirement: Browse the entire workspace filesystem
+
+The Files sidebar SHALL list and search the owner's workspace filesystem on open or refresh, including nested files written directly by the owner or an agent. Browsing SHALL work without prior import or file registration. The sidebar SHALL distinguish an unavailable filesystem from an empty directory.
+
+#### Scenario: Direct writes appear in Files
+
+1. **WHEN** Alice creates a nested text file and an agent writes a CSV directly on her workspace VM, then Alice opens or refreshes Files in another session
+2. **THEN** she can browse to both entries and find them by filename without importing them.
+3. **WHEN** her VM becomes unreachable and she refreshes Files
+4. **THEN** she sees that her files are unavailable and can retry when the machine returns.
 
 ### Requirement: Durable owner snapshots and document identity
 
-Within a deployment the API and worker SHALL use the same durable database and address documents by stable IDs. Restarting PostgreSQL and the API with the same database and document volumes SHALL preserve owner-scoped snapshots, document metadata, and the exact bytes of each attachment.
+The API and worker SHALL use the same database and resolve files on the owner's persistent workspace disk. Documents referenced by mail or preview SHALL have stable file IDs. An infrastructure restart or VM replacement using the retained disk SHALL preserve workspace identity, records, registered document bytes and ordinary files.
 
 #### Scenario: Reopen both owners' workspaces
 
-1. **WHEN** the test records each owner's counts, IDs, preferences, attachment metadata and bytes, restarts PostgreSQL and the API, and reads both snapshots again
-2. **THEN** those values match each owner's recorded values and the original attachment IDs still open the same bytes.
+1. **WHEN** the test records each owner's counts, IDs, preferences, ordinary files, attachment metadata and bytes, restarts PostgreSQL, the API and the VMs with their disks retained, then replaces Alice's VM with one using her original disk
+2. **THEN** those values match each owner's recorded values, directly created files remain readable, and the original attachment IDs still open the same bytes.
 
 ### Requirement: Publish complete documents
 
-The system SHALL keep document storage private and expose a document only when its complete bytes and durable metadata agree. It SHALL reconcile interrupted writes before making the affected document available to readers.
+The system SHALL expose a managed document only when its complete bytes and committed metadata agree. It SHALL reconcile interrupted writes and restrict cleanup of abandoned files to its private staging area. It SHALL preserve ordinary workspace files regardless of whether they have database records.
 
 #### Scenario: Interruption during document publication
 
-1. **WHEN** a process stops after writing only part of a file or after publishing its bytes but before committing its record
-2. **THEN** neither snapshots nor file reads expose an incomplete attachment.
+1. **WHEN** an owner has an uncatalogued file on disk and a process stops after writing part of a managed file or publishing its bytes before the database commit
+2. **THEN** snapshots, Files, and document reads withhold the incomplete or uncommitted managed document, and recovery preserves the owner's uncatalogued file.
 3. **WHEN** recovery and a retry finish
 4. **THEN** the owner sees one complete attachment under its committed ID and can read all its expected bytes.
 

@@ -52,14 +52,21 @@ Both modes SHALL permit open signup with Google or GitHub through Clerk as the o
 
 ### Requirement: Authorize every private operation against its owner
 
-The API SHALL require an active Cueia session for private routes and derive the workspace from that session's user. Collection queries, snapshot and individual reads, mutations, and signed-link issuance SHALL be restricted to resources in that workspace.
+The API SHALL require an active Cueia session for private routes and derive its workspace and machine from the session's user. Filesystem browsing, search, file registration, reads, mutations, and signed-link issuance SHALL be restricted to that owner's workspace. Paths and symlinks SHALL resolve within its workspace filesystem.
 
 #### Scenario: Two owners request workspace records
 
 1. **WHEN** Alice and Bob each use their session to request a collection or the workspace snapshot
 2. **THEN** each response contains only records belonging to the requesting owner.
 
-#### Scenario: Bob presents Alice's attachment ID
+#### Scenario: The same path exists on two machines
+
+1. **WHEN** Alice and Bob each create `reports/summary.csv` with different contents and access that path through their own sessions
+2. **THEN** each can list and read only the file on their own VM.
+3. **WHEN** Bob supplies Alice's file ID or tries a path or symlink outside his workspace root
+4. **THEN** the API denies access and exposes no file from outside Bob's workspace.
+
+#### Scenario: Bob presents
 
 1. **WHEN** Bob requests a direct read, a change, or a signed preview link for Alice's attachment using his session
 2. **THEN** the API denies each operation, returns neither Alice's bytes nor a link, and preserves her record.
@@ -107,7 +114,12 @@ A signed link SHALL authorize only its bound purpose, resource ID, and permitted
 3. **WHEN** the link is altered, used for another resource or purpose, or presented to list the workspace or modify a file
 4. **THEN** access is denied and the file is unchanged.
 
-#### Scenario: Restart and expire a link
+#### Scenario: Preview a PDF discovered in Files
+
+1. **WHEN** Alice selects an ordinary PDF on her VM for preview and obtains a signed link, then edits the source file
+2. **THEN** that link still refers to the captured bytes until it expires, and opening it grants access only to that document version.
+
+#### Scenario: Restart and expire
 
 1. **WHEN** the API restarts on the same persistent storage and an unexpired preview link is opened
 2. **THEN** the same attachment opens.
