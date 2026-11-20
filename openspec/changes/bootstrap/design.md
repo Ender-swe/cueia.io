@@ -247,13 +247,13 @@ schema_migrations:
 
 #### Candidate indexes
 
-| Table | Candidate index | Purpose |
-| --- | --- | --- |
-| `sessions` | `(user_id)` | Find or revoke a user’s sessions |
-| `sessions` | `(expires_at)` | Purge expired sessions when volume warrants it |
-| `mail_messages` | `(workspace_id, thread_id, sent_at, id)` | Read and paginate messages in a thread |
-| `mail_attachments` | `(workspace_id, file_id)` | Find attachment references to a file |
-| `calendar_events` | `(workspace_id, starts_at)` | List workspace events by start time |
+| Table              | Candidate index                          | Purpose                                        |
+| ------------------ | ---------------------------------------- | ---------------------------------------------- |
+| `sessions`         | `(user_id)`                              | Find or revoke a user’s sessions               |
+| `sessions`         | `(expires_at)`                           | Purge expired sessions when volume warrants it |
+| `mail_messages`    | `(workspace_id, thread_id, sent_at, id)` | Read and paginate messages in a thread         |
+| `mail_attachments` | `(workspace_id, file_id)`                | Find attachment references to a file           |
+| `calendar_events`  | `(workspace_id, starts_at)`              | List workspace events by start time            |
 
 ### Resolve workspace ownership at the storage boundary
 

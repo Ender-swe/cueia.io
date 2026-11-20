@@ -8,318 +8,318 @@ paths:
       operationId: getHealth
       security: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Health'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                $ref: "#/components/schemas/Health"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
   /api/providers:
     get:
       operationId: getProviders
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Provider'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                  $ref: "#/components/schemas/Provider"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
   /api/session:
     post:
       operationId: exchangeSession
       security:
-      - Clerk: []
+        - Clerk: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
     delete:
       operationId: revokeSession
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '204':
+        "204":
           description: Success
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
   /api/workspace:
     get:
       operationId: getWorkspace
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Workspace'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
   /api/workspace/preferences:
     patch:
       operationId: updatePreferences
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Preferences'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                $ref: "#/components/schemas/Preferences"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Preferences'
+              $ref: "#/components/schemas/Preferences"
   /api/mail/threads:
     get:
       operationId: listThreads
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Thread'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                  $ref: "#/components/schemas/Thread"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
   /api/calendar/events:
     get:
       operationId: listEvents
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Event'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                  $ref: "#/components/schemas/Event"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
   /api/files:
     get:
       operationId: listFiles
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Entry'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                  $ref: "#/components/schemas/Entry"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       parameters:
-      - name: directory
-        in: query
-        required: false
-        schema:
-          type: string
+        - name: directory
+          in: query
+          required: false
+          schema:
+            type: string
   /api/files/search:
     get:
       operationId: searchFiles
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Entry'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                  $ref: "#/components/schemas/Entry"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       parameters:
-      - name: name
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
   /api/files/content:
     get:
       operationId: readFile
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       parameters:
-      - name: path
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
   /api/documents:
     post:
       operationId: registerDocument
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: object
                 required:
-                - fileId
+                  - fileId
                 properties:
                   fileId:
                     type: string
                     format: uuid
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       requestBody:
         required: true
         content:
@@ -327,7 +327,7 @@ paths:
             schema:
               type: object
               required:
-              - path
+                - path
               properties:
                 path:
                   type: string
@@ -335,101 +335,101 @@ paths:
     get:
       operationId: readDocument
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       parameters:
-      - name: fileId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
   /api/documents/{fileId}/preview-links:
     post:
       operationId: issuePreview
       security:
-      - Cueia: []
+        - Cueia: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Preview'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+                $ref: "#/components/schemas/Preview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       parameters:
-      - name: fileId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
   /api/previews/{fileId}:
     get:
       operationId: redeemPreview
       security: []
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-        '400':
-          $ref: '#/components/responses/Error400'
-        '401':
-          $ref: '#/components/responses/Error401'
-        '403':
-          $ref: '#/components/responses/Error403'
-        '404':
-          $ref: '#/components/responses/Error404'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '503':
-          $ref: '#/components/responses/Error503'
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
+        "503":
+          $ref: "#/components/responses/Error503"
       parameters:
-      - name: fileId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: token
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
 components:
   securitySchemes:
     Cueia:
@@ -446,43 +446,43 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     Error401:
       description: Authentication failed
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     Error403:
       description: Access denied
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     Error404:
       description: Resource not found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     Error429:
       description: Too many requests
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     Error503:
       description: Required dependency unavailable
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
   schemas:
     Error:
       type: object
       required:
-      - code
-      - message
+        - code
+        - message
       properties:
         code:
           type: string
@@ -491,8 +491,8 @@ components:
     Session:
       type: object
       required:
-      - token
-      - expiresAt
+        - token
+        - expiresAt
       properties:
         token:
           type: string
@@ -502,8 +502,8 @@ components:
     Attachment:
       type: object
       required:
-      - fileId
-      - filename
+        - fileId
+        - filename
       properties:
         fileId:
           type: string
@@ -513,11 +513,11 @@ components:
     Event:
       type: object
       required:
-      - id
-      - title
-      - startsAt
-      - endsAt
-      - timeZone
+        - id
+        - title
+        - startsAt
+        - endsAt
+        - timeZone
       properties:
         id:
           type: string
@@ -535,11 +535,11 @@ components:
     Message:
       type: object
       required:
-      - id
-      - senderAddress
-      - bodyText
-      - sentAt
-      - attachments
+        - id
+        - senderAddress
+        - bodyText
+        - sentAt
+        - attachments
       properties:
         id:
           type: string
@@ -554,13 +554,13 @@ components:
         attachments:
           type: array
           items:
-            $ref: '#/components/schemas/Attachment'
+            $ref: "#/components/schemas/Attachment"
     Thread:
       type: object
       required:
-      - id
-      - subject
-      - messages
+        - id
+        - subject
+        - messages
       properties:
         id:
           type: string
@@ -570,7 +570,7 @@ components:
         messages:
           type: array
           items:
-            $ref: '#/components/schemas/Message'
+            $ref: "#/components/schemas/Message"
     Preferences:
       type: object
       additionalProperties:
@@ -578,10 +578,10 @@ components:
     Workspace:
       type: object
       required:
-      - id
-      - threads
-      - events
-      - preferences
+        - id
+        - threads
+        - events
+        - preferences
       properties:
         id:
           type: string
@@ -589,19 +589,19 @@ components:
         threads:
           type: array
           items:
-            $ref: '#/components/schemas/Thread'
+            $ref: "#/components/schemas/Thread"
         events:
           type: array
           items:
-            $ref: '#/components/schemas/Event'
+            $ref: "#/components/schemas/Event"
         preferences:
-          $ref: '#/components/schemas/Preferences'
+          $ref: "#/components/schemas/Preferences"
     Entry:
       type: object
       required:
-      - path
-      - name
-      - kind
+        - path
+        - name
+        - kind
       properties:
         path:
           type: string
@@ -610,36 +610,36 @@ components:
         kind:
           type: string
           enum:
-          - file
-          - directory
+            - file
+            - directory
     Health:
       type: object
       required:
-      - status
+        - status
       properties:
         status:
           type: string
           enum:
-          - ok
+            - ok
     Provider:
       type: object
       required:
-      - name
-      - status
+        - name
+        - status
       properties:
         name:
           type: string
         status:
           type: string
           enum:
-          - disabled
-          - configured
-          - unavailable
+            - disabled
+            - configured
+            - unavailable
     Preview:
       type: object
       required:
-      - url
-      - expiresAt
+        - url
+        - expiresAt
       properties:
         url:
           type: string

@@ -9,6 +9,7 @@
   "scripts": {
     "start": "docker compose up -d --build --force-recreate",
     "stop": "docker compose down",
+    "pretty": "prettier --ignore-path .prettierignore --write . && find apps/server -type d -name vendor -prune -o -type f -name '*.go' -exec gofmt -w {} +",
     "build": "turbo run build build:go",
     "type-check": "turbo run type-check type-check:go",
     "test": "turbo run test test:go",
@@ -17,7 +18,8 @@
     "test:go": "cd apps/server && go test ./..."
   },
   "devDependencies": {
-    "typescript": "5.9.3",
-    "turbo": "2.6.1"
+    "prettier": "3.10.1",
+    "turbo": "2.6.1",
+    "typescript": "5.9.3"
   }
 }

@@ -4,10 +4,5 @@
     "outDir": "dist",
     "resolveJsonModule": true
   },
-  "include": [
-    "src",
-    "journey.ts",
-    "first-visit.ts",
-    "second-visit.ts"
-  ]
+  "include": ["src", "journey.ts", "first-visit.ts", "second-visit.ts"]
 }

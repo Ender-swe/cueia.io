@@ -1,6 +1,6 @@
-export * from "./button"
-export * from "./heading"
-export * from "./input"
-export * from "./modal"
-export * from "./textarea"
-export { cn } from "./util/cn"
+export * from "./button";
+export * from "./heading";
+export * from "./input";
+export * from "./modal";
+export * from "./textarea";
+export { cn } from "./util/cn";

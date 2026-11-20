@@ -10,10 +10,10 @@ An owner can watch a public page and receive an in-app alert when a condition be
 
 Create an owner-bound watch with target URL, condition and value, interval, linked task ID, lifecycle state, and next due time. Use the browser page reader for both scheduled and manual checks. Save an observation with stable ID, actual URL, title, observed time, bounded text, and enough matching evidence to explain the result. Persist the previous baseline, last match, check count, consecutive failures, and delivery state.
 
-| Condition | Evaluation | When to notify |
-| --- | --- | --- |
-| Page text changed | Compare normalized visible lines. Collapse whitespace, ignore relative-time-only changes, and summarize added, removed, and updated lines. | Use the first successful read as the baseline. Notify on each subsequent material difference. |
-| Phrase appears | Trim and collapse whitespace in phrase and page text, and compare case-insensitively. | Notify on first observed presence and again after absence followed by presence. |
+| Condition             | Evaluation                                                                                                                                            | When to notify                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Page text changed     | Compare normalized visible lines. Collapse whitespace, ignore relative-time-only changes, and summarize added, removed, and updated lines.            | Use the first successful read as the baseline. Notify on each subsequent material difference.                  |
+| Phrase appears        | Trim and collapse whitespace in phrase and page text, and compare case-insensitively.                                                                 | Notify on first observed presence and again after absence followed by presence.                                |
 | Price below threshold | Recognize a USD amount with a dollar sign or USD marker, allowing intervening whitespace. Compare numeric amounts using a strict less-than threshold. | Notify on the first matching observation in each uninterrupted sequence of matches. Equality does not qualify. |
 
 ### Scheduling and delivery

@@ -1,11 +1,14 @@
-import { Heading, Modal, ModalContainer, ModalContent } from "@cueia/ui"
+import { Heading, Modal, ModalContainer, ModalContent } from "@cueia/ui";
 
 export interface AttachmentPreviewProps {
-  attachment: { filename: string; signedUrl: string } | null
-  onClose: () => void
+  attachment: { filename: string; signedUrl: string } | null;
+  onClose: () => void;
 }
 
-export function AttachmentPreview({ attachment, onClose }: AttachmentPreviewProps) {
+export function AttachmentPreview({
+  attachment,
+  onClose,
+}: AttachmentPreviewProps) {
   return (
     <ModalContainer onDismiss={onClose}>
       {attachment && (
@@ -22,5 +25,5 @@ export function AttachmentPreview({ attachment, onClose }: AttachmentPreviewProp
         </Modal>
       )}
     </ModalContainer>
-  )
+  );
 }

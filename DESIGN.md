@@ -8,14 +8,14 @@ Two marks identify Cueia. Three open apricot rings form the small mark at the to
 
 ## 2. Color palette & roles
 
-| Color | Where it appears |
-| --- | --- |
-| Rail charcoal (#191918), canvas charcoal (#1B1B1A), panel charcoal (#1E1E1D) | The rail is darkest. The conversation occupies the canvas. Both side panes use the slightly lighter panel shade. |
-| Graphite (#383734) | One-pixel rules divide panes, the conversation header, and task sections. |
-| Warm ivory (#F0EDE8) and soft stone (#AAA7A1) | Ivory carries headings and body text. Stone carries timestamps, placeholders, secondary icons, and empty states. |
-| Ash (#292927) and umber (#503B30) | Cueia’s replies and email threads use ash. The user’s messages use umber with cream text (#F6EEE7). |
-| Apricot (#E9AA83) | The brand mark, active Chat control, selected thread icon, attachment names, task link, and keyboard focus share this accent. |
-| Pale sage (#B9DCA2) | A small dot beside “Connected” in the sample workspace. The private workspace pairs a stone dot with “Agent disconnected.” |
+| Color                                                                        | Where it appears                                                                                                              |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Rail charcoal (#191918), canvas charcoal (#1B1B1A), panel charcoal (#1E1E1D) | The rail is darkest. The conversation occupies the canvas. Both side panes use the slightly lighter panel shade.              |
+| Graphite (#383734)                                                           | One-pixel rules divide panes, the conversation header, and task sections.                                                     |
+| Warm ivory (#F0EDE8) and soft stone (#AAA7A1)                                | Ivory carries headings and body text. Stone carries timestamps, placeholders, secondary icons, and empty states.              |
+| Ash (#292927) and umber (#503B30)                                            | Cueia’s replies and email threads use ash. The user’s messages use umber with cream text (#F6EEE7).                           |
+| Apricot (#E9AA83)                                                            | The brand mark, active Chat control, selected thread icon, attachment names, task link, and keyboard focus share this accent. |
+| Pale sage (#B9DCA2)                                                          | A small dot beside “Connected” in the sample workspace. The private workspace pairs a stone dot with “Agent disconnected.”    |
 
 The shared palette and the workspace-specific shades are defined in the [theme](packages/ui/tailwind.css) and [workspace stylesheet](apps/dashboard/app/workspace.css).
 

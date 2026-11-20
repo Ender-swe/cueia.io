@@ -1,1 +1,1 @@
-export type { components, operations, paths } from "./contract"
+export type { components, operations, paths } from "./contract";

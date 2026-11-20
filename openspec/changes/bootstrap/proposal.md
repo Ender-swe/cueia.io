@@ -41,23 +41,23 @@ In bootstrap, Main chat introduces the sample workshop using the owner's mailbox
 
 **Specified** means the workspace access spec names the method and path. **Proposed** means the operation is planned and its method and path are candidates for the OpenAPI contract. [Workspace access spec](specs/workspace-access/spec.md) · [OpenAPI contract task](tasks.md#1-build-and-contract)
 
-| Route | Status | What it does |
-| --- | --- | --- |
-| `POST /api/session` | Specified | Exchanges a verified Clerk token for an expiring, opaque Cueia bearer. Two sign-ins for the same person get distinct bearers for the same workspace. |
-| `GET /api/workspace` | Specified | Returns the owner's snapshot. In sample mode, Main chat can show the workshop mail, attachment reference, calendar event, and saved preferences from this response. |
-| `DELETE /api/session` | Specified | Signs out the presenting Cueia session. Its next private request gets 401. The owner's other sessions keep working. |
-| `GET /api/health` | Proposed | Reports API health for the deployment check. |
-| `GET /api/providers` | Proposed | Reports each optional provider as disabled, configured, or unavailable. |
-| `GET /api/mail/threads` | Proposed | Lists the owner's mail threads independently of the initial snapshot. |
-| `GET /api/calendar/events` | Proposed | Lists the owner's calendar events independently of the initial snapshot. |
-| `PATCH /api/workspace/preferences` | Proposed | Saves changed preferences. The owner's other session sees them on its next snapshot. |
-| `GET /api/files?directory=workshop` | Proposed | Lists the current contents of a directory on the owner's VM, including files created directly on disk. |
-| `GET /api/files/search?name=registration` | Proposed | Finds matching filenames across nested directories. |
-| `GET /api/files/content?path=reports/summary.csv` | Proposed | Reads the current bytes of an ordinary file by workspace-relative path. |
-| `POST /api/documents` | Proposed | Registers a PDF by workspace-relative path and returns the `fileId` for the captured version. Registering the same path and bytes again returns the same ID. |
-| `GET /api/documents/{fileId}/content` | Proposed | Reads the registered version's bytes using the owner's Cueia bearer. A mail attachment uses this same file ID. |
-| `POST /api/documents/{fileId}/preview-links` | Proposed | Checks ownership and returns a short-lived signed URL for viewing that PDF version. |
-| `GET /api/previews/{fileId}?token=…` | Proposed | Serves that version's stored bytes when the preview dialog opens a valid signed URL. The link expires at its signed expiry time. |
+| Route                                             | Status    | What it does                                                                                                                                                        |
+| ------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/session`                               | Specified | Exchanges a verified Clerk token for an expiring, opaque Cueia bearer. Two sign-ins for the same person get distinct bearers for the same workspace.                |
+| `GET /api/workspace`                              | Specified | Returns the owner's snapshot. In sample mode, Main chat can show the workshop mail, attachment reference, calendar event, and saved preferences from this response. |
+| `DELETE /api/session`                             | Specified | Signs out the presenting Cueia session. Its next private request gets 401. The owner's other sessions keep working.                                                 |
+| `GET /api/health`                                 | Proposed  | Reports API health for the deployment check.                                                                                                                        |
+| `GET /api/providers`                              | Proposed  | Reports each optional provider as disabled, configured, or unavailable.                                                                                             |
+| `GET /api/mail/threads`                           | Proposed  | Lists the owner's mail threads independently of the initial snapshot.                                                                                               |
+| `GET /api/calendar/events`                        | Proposed  | Lists the owner's calendar events independently of the initial snapshot.                                                                                            |
+| `PATCH /api/workspace/preferences`                | Proposed  | Saves changed preferences. The owner's other session sees them on its next snapshot.                                                                                |
+| `GET /api/files?directory=workshop`               | Proposed  | Lists the current contents of a directory on the owner's VM, including files created directly on disk.                                                              |
+| `GET /api/files/search?name=registration`         | Proposed  | Finds matching filenames across nested directories.                                                                                                                 |
+| `GET /api/files/content?path=reports/summary.csv` | Proposed  | Reads the current bytes of an ordinary file by workspace-relative path.                                                                                             |
+| `POST /api/documents`                             | Proposed  | Registers a PDF by workspace-relative path and returns the `fileId` for the captured version. Registering the same path and bytes again returns the same ID.        |
+| `GET /api/documents/{fileId}/content`             | Proposed  | Reads the registered version's bytes using the owner's Cueia bearer. A mail attachment uses this same file ID.                                                      |
+| `POST /api/documents/{fileId}/preview-links`      | Proposed  | Checks ownership and returns a short-lived signed URL for viewing that PDF version.                                                                                 |
+| `GET /api/previews/{fileId}?token=…`              | Proposed  | Serves that version's stored bytes when the preview dialog opens a valid signed URL. The link expires at its signed expiry time.                                    |
 
 ### Acceptance on a fresh installation
 
@@ -83,12 +83,12 @@ All feature proposals depend on this workspace, authentication, and storage cont
 
 ## Build order and ownership
 
-| Stage | Proposals | Working milestone |
-| --- | --- | --- |
-| 1 | Foundation | Sign in to one private VM-backed workspace, browse its files, preview the sample PDF, recover files after restart, and revoke a session. |
-| 2 | [Tasks](../model-task-recovery/proposal.md), [runtime](../build-agent-runtime/proposal.md), [clients](../build-clients/proposal.md) | Ask an agent to do work in chat, track the delegated task, close the client, and return to its saved result. The client can connect the shell to these APIs as the worker is built. |
-| 3 | [Threads](../map-conversations/proposal.md), [connectors](../build-connectors/proposal.md), [browser](../build-browser/proposal.md), [computer](../build-computer/proposal.md) | Replay a conversation, inspect its evidence, and review an action. |
-| 4 | [Personal workspace](../build-personal-workspace/proposal.md), [documents](../trace-document-review/proposal.md), [watches](../characterize-watches/proposal.md) | Reopen a saved result, send a reviewed form, and follow a watch alert. |
-| 5 | [Release](../ship/proposal.md) | Build from a clean Cueia checkout and record results by platform and provider. |
+| Stage | Proposals                                                                                                                                                                      | Working milestone                                                                                                                                                                   |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Foundation                                                                                                                                                                     | Sign in to one private VM-backed workspace, browse its files, preview the sample PDF, recover files after restart, and revoke a session.                                            |
+| 2     | [Tasks](../model-task-recovery/proposal.md), [runtime](../build-agent-runtime/proposal.md), [clients](../build-clients/proposal.md)                                            | Ask an agent to do work in chat, track the delegated task, close the client, and return to its saved result. The client can connect the shell to these APIs as the worker is built. |
+| 3     | [Threads](../map-conversations/proposal.md), [connectors](../build-connectors/proposal.md), [browser](../build-browser/proposal.md), [computer](../build-computer/proposal.md) | Replay a conversation, inspect its evidence, and review an action.                                                                                                                  |
+| 4     | [Personal workspace](../build-personal-workspace/proposal.md), [documents](../trace-document-review/proposal.md), [watches](../characterize-watches/proposal.md)               | Reopen a saved result, send a reviewed form, and follow a watch alert.                                                                                                              |
+| 5     | [Release](../ship/proposal.md)                                                                                                                                                 | Build from a clean Cueia checkout and record results by platform and provider.                                                                                                      |
 
 Bank feeds, device push, and OCR are future extensions. Show the actual availability of each configured integration throughout the five stages.

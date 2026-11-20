@@ -1,45 +1,86 @@
-import { createRoot } from "react-dom/client"
-import { ClerkFailed, ClerkLoading, ClerkProvider, useAuth } from "@clerk/react"
-import { Provider } from "@react-spectrum/s2/Provider"
-import { BrowserRouter, Navigate, Outlet, Route, Routes, useHref, useNavigate } from "react-router"
-import { AuthPage, authLocalization } from "./pages/auth"
-import { WorkspacePage } from "./pages/workspace"
-import { SampleWorkspace } from "./sample-workspace"
-import "@fontsource-variable/dm-sans"
-import "./workspace.css"
+import { createRoot } from "react-dom/client";
+import {
+  ClerkFailed,
+  ClerkLoading,
+  ClerkProvider,
+  useAuth,
+} from "@clerk/react";
+import { Provider } from "@react-spectrum/s2/Provider";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useHref,
+  useNavigate,
+} from "react-router";
+import { AuthPage, authLocalization } from "./pages/auth";
+import { WorkspacePage } from "./pages/workspace";
+import { SampleWorkspace } from "./sample-workspace";
+import "@fontsource-variable/dm-sans";
+import "./workspace.css";
 
 function RequireSignIn() {
-  const { isLoaded, isSignedIn, sessionId } = useAuth()
-  if (!isLoaded) return <main className="entry">
-    <ClerkLoading><p role="status">Checking sign-in…</p></ClerkLoading>
-    <ClerkFailed><p role="alert">Sign-in couldn’t load. Refresh the page to try again.</p></ClerkFailed>
-  </main>
+  const { isLoaded, isSignedIn, sessionId } = useAuth();
+  if (!isLoaded)
+    return (
+      <main className="entry">
+        <ClerkLoading>
+          <p role="status">Checking sign-in…</p>
+        </ClerkLoading>
+        <ClerkFailed>
+          <p role="alert">
+            Sign-in couldn’t load. Refresh the page to try again.
+          </p>
+        </ClerkFailed>
+      </main>
+    );
   if (!isSignedIn || !sessionId) {
-    const search = new URLSearchParams({ redirect_url: window.location.href }).toString()
-    return <Navigate replace to={{ pathname: "/sign-in", search }} />
+    const search = new URLSearchParams({
+      redirect_url: window.location.href,
+    }).toString();
+    return <Navigate replace to={{ pathname: "/sign-in", search }} />;
   }
-  return <Outlet key={sessionId} />
+  return <Outlet key={sessionId} />;
 }
 
 function Dashboard() {
-  const navigate = useNavigate()
-  const key = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-  return <Provider colorScheme="dark" router={{ navigate, useHref }}>
-    {key ? <ClerkProvider publishableKey={key}
-      routerPush={to => navigate(to)} routerReplace={to => navigate(to, { replace: true })}
-      signInUrl="/sign-in" signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/"
-      localization={authLocalization}>
-      <Routes>
-        <Route path="/sign-in/*" element={<AuthPage mode="sign-in" />} />
-        <Route path="/sign-up/*" element={<AuthPage mode="sign-up" />} />
-        <Route element={<RequireSignIn />}>
-          <Route path="/" element={<SampleWorkspace />} />
-          <Route path="/workspace" element={<WorkspacePage />} />
-        </Route>
-      </Routes>
-    </ClerkProvider> : <main className="entry" role="alert">Set VITE_CLERK_PUBLISHABLE_KEY to enable sign-in.</main>}
-  </Provider>
+  const navigate = useNavigate();
+  const key = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  return (
+    <Provider colorScheme="dark" router={{ navigate, useHref }}>
+      {key ? (
+        <ClerkProvider
+          publishableKey={key}
+          routerPush={(to) => navigate(to)}
+          routerReplace={(to) => navigate(to, { replace: true })}
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          signInFallbackRedirectUrl="/"
+          signUpFallbackRedirectUrl="/"
+          localization={authLocalization}
+        >
+          <Routes>
+            <Route path="/sign-in/*" element={<AuthPage mode="sign-in" />} />
+            <Route path="/sign-up/*" element={<AuthPage mode="sign-up" />} />
+            <Route element={<RequireSignIn />}>
+              <Route path="/" element={<SampleWorkspace />} />
+              <Route path="/workspace" element={<WorkspacePage />} />
+            </Route>
+          </Routes>
+        </ClerkProvider>
+      ) : (
+        <main className="entry" role="alert">
+          Set VITE_CLERK_PUBLISHABLE_KEY to enable sign-in.
+        </main>
+      )}
+    </Provider>
+  );
 }
 
-createRoot(document.getElementById("root")!).render(<BrowserRouter><Dashboard /></BrowserRouter>)
+createRoot(document.getElementById("root")!).render(
+  <BrowserRouter>
+    <Dashboard />
+  </BrowserRouter>,
+);

@@ -12,14 +12,14 @@ Create each task in the workspace resolved from the owner's session. Save its ID
 
 Persist attempts with their original start time, progress, evidence IDs, input answers, checkpoint, and outcome. Expose create, inspect, answer, pause, resume, cancel, and eligible retry operations. Task detail must explain what work is due, what input or review is outstanding, and where to open its result.
 
-| Current state | Event | Result |
-| --- | --- | --- |
-| Queued or due scheduled | Worker wins claim | Running with an attempt and expiring lease |
-| Running | Needs information or approval | Save checkpoint and input request or review ID, release lease, and wait |
-| Waiting for input or review | Valid answer or ledger decision arrives | Resume from saved context and settle or continue according to the decision |
-| Running | Next observation due later | Save progress, due time, and scheduled state |
-| Eligible active task | Owner pauses or cancels | Invalidate the lease. Pause retains progress for resume. Cancellation ends eligibility and closes pending reviews. |
-| Running | Handler finishes or exhausts retries | Save evidence and a succeeded or failed outcome. Publish terminal status with its result or error. |
+| Current state               | Event                                   | Result                                                                                                             |
+| --------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Queued or due scheduled     | Worker wins claim                       | Running with an attempt and expiring lease                                                                         |
+| Running                     | Needs information or approval           | Save checkpoint and input request or review ID, release lease, and wait                                            |
+| Waiting for input or review | Valid answer or ledger decision arrives | Resume from saved context and settle or continue according to the decision                                         |
+| Running                     | Next observation due later              | Save progress, due time, and scheduled state                                                                       |
+| Eligible active task        | Owner pauses or cancels                 | Invalidate the lease. Pause retains progress for resume. Cancellation ends eligibility and closes pending reviews. |
+| Running                     | Handler finishes or exhausts retries    | Save evidence and a succeeded or failed outcome. Publish terminal status with its result or error.                 |
 
 ### Worker behavior
 

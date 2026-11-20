@@ -9,6 +9,14 @@
   --color-sage: #b9dca2;
 }
 
-.cue-button { cursor: pointer; }
-.cue-button[data-disabled] { cursor: default; }
-.cue-input, .cue-textarea { min-width: 0; max-width: 100%; }
+.cue-button {
+  cursor: pointer;
+}
+.cue-button[data-disabled] {
+  cursor: default;
+}
+.cue-input,
+.cue-textarea {
+  min-width: 0;
+  max-width: 100%;
+}
