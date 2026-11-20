@@ -2,7 +2,7 @@
 
 ## 1. Build and contract
 
-- [ ] 1.1 Create the pinned Go module in `backend/` with `cmd/api/main.go`, `cmd/worker/main.go`, and `cmd/migrate/main.go`. Commit `backend/go.mod` and `backend/go.sum`. From `backend/`, verify a clean module download, `go build ./cmd/...`, and `go test ./...` with the pinned toolchain.
+- [x] 1.1 Create the pinned Go module in `backend/` with `cmd/api/main.go`, `cmd/worker/main.go`, and `cmd/migrate/main.go`. Commit `backend/go.mod` and `backend/go.sum`. From `backend/`, verify a clean module download, `go build ./cmd/...`, and `go test ./...` with the pinned toolchain.
 - [ ] 1.2 Register `apps/*` and `packages/*` in the root Bun workspace. Add manifests for `apps/dashboard`, `apps/browser-worker`, `packages/components`, and `packages/api-types`. Declare both shared packages as dashboard dependencies. Pin Bun in the root `package.json` and track one `bun.lock`. Configure and document root Turbo build, type-check, and test tasks for both languages, running Go commands from `backend/`. After `bun install --frozen-lockfile` in a clean checkout, verify Turbo discovers all four TypeScript workspaces and run the root tasks.
 - [ ] 1.3 Write `backend/api/openapi.yaml` for the bootstrap routes, including workspace directory listing, filename search, PDF registration and reads, and their error responses. Generate TypeScript types from that contract into `packages/api-types` and export them for the dashboard. Verify generation is reproducible and that changing a response without regenerating its types fails the contract check.
 - [ ] 1.4 Build a reusable attachment preview dialog in `packages/components` using Adobe React Spectrum 2 (`@react-spectrum/s2`). Export the dialog for dashboard pages to open with a signed PDF URL.
