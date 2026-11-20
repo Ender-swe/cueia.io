@@ -158,7 +158,27 @@ func (s *Service) open(ctx context.Context, w string) (provider.Filesystem, erro
 	if err != nil {
 		return nil, err
 	}
-	disk, err := s.Provider.Open(ctx, provider.Owner{Deployment: s.Deployment, Workspace: w}, m)
+	owner := provider.Owner{Deployment: s.Deployment, Workspace: w}
+	disk, err := s.Provider.Open(ctx, owner, m)
+	var replaced provider.Replacement
+	if errors.As(err, &replaced) {
+		current := replaced.Current
+		if current.DiskID != m.DiskID || current.ID == "" {
+			return nil, ErrUnavailable
+		}
+		disk, err = s.Provider.Open(ctx, owner, current)
+		if err == nil {
+			// Concurrent readers can confirm the same replacement. An older
+			// observation must never overwrite a newer persisted binding.
+			tag, updateErr := s.DB.Exec(ctx, `UPDATE workspace_machines SET vm_resource_id=$1,updated_at=now()
+				WHERE workspace_id=$2 AND workspace_disk_resource_id=$3 AND vm_resource_id IN ($4,$1)
+				AND provisioning_state='ready'`, current.ID, w, m.DiskID, m.ID)
+			if updateErr != nil || tag.RowsAffected() != 1 {
+				disk.Close()
+				return nil, ErrUnavailable
+			}
+		}
+	}
 	if err != nil {
 		return nil, fmt.Errorf("%w: open machine", ErrUnavailable)
 	}

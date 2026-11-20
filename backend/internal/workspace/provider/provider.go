@@ -17,6 +17,22 @@ type Machine struct {
 	DiskID string
 }
 
+// Replacement reports the current machine only after the provider verifies the
+// workspace owner and confirms that its original disk is still attached.
+type Replacement struct{ Current Machine }
+
+func (Replacement) Error() string { return "workspace machine replaced" }
+
+func CheckBinding(expected, current Machine) error {
+	if expected == current {
+		return nil
+	}
+	if expected.ID != "" && current.ID != "" && expected.DiskID != "" && expected.DiskID == current.DiskID {
+		return Replacement{Current: current}
+	}
+	return fs.ErrPermission
+}
+
 type Filesystem interface {
 	fs.FS
 	io.Closer

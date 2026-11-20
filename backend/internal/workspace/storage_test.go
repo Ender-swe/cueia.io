@@ -222,8 +222,8 @@ func TestStorageIsolation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = s.Files(ctx, alice, ".", ""); err == nil {
-		t.Fatal("unavailable binding reported as available")
+	if got, err := s.Document(ctx, alice, fileID); err != nil || !bytes.Equal(got, sample.PDF) {
+		t.Fatal("replacement did not reopen captured PDF", err)
 	}
 }
 

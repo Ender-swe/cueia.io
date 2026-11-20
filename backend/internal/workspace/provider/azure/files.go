@@ -96,8 +96,8 @@ func (p *Provider) Open(ctx context.Context, o provider.Owner, m provider.Machin
 	if err != nil {
 		return nil, err
 	}
-	if obs.machine != m {
-		return nil, fs.ErrPermission
+	if err := provider.CheckBinding(m, obs.machine); err != nil {
+		return nil, err
 	}
 	nic, err := p.resources.GetByID(ctx, obs.nic, networkVersion, nil)
 	if err != nil {

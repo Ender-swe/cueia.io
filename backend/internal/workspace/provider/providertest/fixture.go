@@ -109,8 +109,8 @@ func (f *Fixture) checkedDir(ctx context.Context, owner provider.Owner, m provid
 	if err != nil {
 		return "", err
 	}
-	if m != current {
-		return "", fs.ErrPermission
+	if err := provider.CheckBinding(m, current); err != nil {
+		return "", err
 	}
 	return dir, nil
 }

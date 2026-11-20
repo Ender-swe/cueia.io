@@ -48,6 +48,13 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return errors.New("cannot load deployment signing key")
 	}
+	if offset := os.Getenv("CUEIA_TEST_PREVIEW_CLOCK_OFFSET"); store.ProviderName == "internal" && offset != "" {
+		advance, err := time.ParseDuration(offset)
+		if err != nil {
+			return errors.New("invalid test preview clock offset")
+		}
+		signer.Now = func() time.Time { return time.Now().Add(advance) }
+	}
 	previewRoutes(mux, sessions, store, signer)
 	server := &http.Server{Addr: settings.Addr, Handler: middleware.Protect(mux, settings.AuthorizedParty, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
 	done := make(chan error, 1)
