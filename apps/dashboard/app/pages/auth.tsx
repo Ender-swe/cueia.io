@@ -1,7 +1,11 @@
 import { ClerkFailed, SignIn, SignUp, useAuth } from "@clerk/react";
 import { CueiaMark } from "@cueia/components";
-import type { ComponentProps } from "react";
+import { Button } from "@cueia/ui";
+import Pause from "@react-spectrum/s2/icons/Pause";
+import Play from "@react-spectrum/s2/icons/Play";
+import { useState, type ComponentProps, type CSSProperties } from "react";
 import { Navigate, useMatch, useSearchParams } from "react-router";
+import paperOrbit from "../assets/paper-orbit.txt?raw";
 import "../auth.css";
 
 export const authLocalization = {
@@ -66,6 +70,38 @@ function workspaceDestination(value: string | null) {
   return null;
 }
 
+function randomTurnAngle() {
+  return Math.random() < 0.5 ? "1turn" : "-1turn";
+}
+
+function PaperOrbit() {
+  const [paused, setPaused] = useState(false);
+  const [turnAngle, setTurnAngle] = useState(randomTurnAngle);
+  const style: CSSProperties & { "--turn-angle": string } = {
+    "--turn-angle": turnAngle,
+    animationPlayState: paused ? "paused" : "running",
+  };
+
+  return (
+    <div className="auth-art">
+      <pre
+        aria-hidden="true"
+        style={style}
+        onAnimationIteration={event => {
+          if (event.animationName === "paper-orbit-turn") setTurnAngle(randomTurnAngle());
+        }}
+      >{paperOrbit.trimEnd()}</pre>
+      <Button
+        className="auth-art-control"
+        aria-label={paused ? "Play artwork animation" : "Pause artwork animation"}
+        onPress={() => setPaused(value => !value)}
+      >
+        {paused ? <Play /> : <Pause />}
+      </Button>
+    </div>
+  );
+}
+
 export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
   const signingIn = mode === "sign-in";
   const { isSignedIn } = useAuth();
@@ -118,7 +154,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
           </p>
         </ClerkFailed>
       </section>
-      <div className="auth-art" aria-hidden="true" />
+      <PaperOrbit />
     </main>
   );
 }

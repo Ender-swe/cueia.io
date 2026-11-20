@@ -1,6 +1,5 @@
 .auth-page {
   display: grid;
-  /* The 3:4 portrait can fill the viewport height while leaving room for the form. */
   grid-template-columns: minmax(0, 1fr) min(50%, 75svh);
   grid-template-rows: minmax(3rem, 4fr) auto minmax(0, 1fr);
   min-height: 100svh;
@@ -29,7 +28,56 @@
 .auth-art {
   grid-column: 2;
   grid-row: 1 / -1;
-  background: url("./assets/paper-orbit.webp") center / contain no-repeat;
+  container-type: inline-size;
+  display: grid;
+  place-items: center;
+  overflow: clip;
+  background: var(--color-surface);
+  border-inline-start: 1px solid var(--color-line);
+}
+.auth-art pre {
+  grid-area: 1 / 1;
+  margin: 0;
+  color: var(--color-apricot);
+  /* Fit the 84-column drawing with space around its outline. */
+  font: 400 min(1.7cqw, 1rem)/1.05 ui-monospace, monospace;
+  font-variant-ligatures: none;
+  user-select: none;
+}
+.auth-art .auth-art-control {
+  display: none;
+  grid-area: 1 / 1;
+  place-self: end;
+  margin: 12px;
+}
+.auth-art-control:focus-visible { outline: 2px solid var(--color-apricot); outline-offset: 2px; }
+
+@media screen and (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  .auth-art pre {
+    /* Move the light along the loop's rim, clipping it to the ASCII strokes. */
+    background-image: radial-gradient(ellipse 24% 23%, var(--color-ink), var(--color-apricot) 48%, color-mix(in srgb, var(--color-apricot) 64%, var(--color-surface)));
+    background-size: 200% 200%;
+    background-clip: text;
+    color: transparent;
+    animation: paper-orbit-light 8s linear infinite, paper-orbit-turn 16s ease-in-out infinite;
+  }
+  .auth-art .auth-art-control { display: inline-flex; }
+}
+
+@keyframes paper-orbit-turn {
+  from { transform: perspective(220cqw) rotateY(0turn); }
+  to { transform: perspective(220cqw) rotateY(var(--turn-angle)); }
+}
+
+@keyframes paper-orbit-light {
+  0%, 100% { background-position: 50% 92%; }
+  12.5% { background-position: 24% 84%; }
+  25% { background-position: 8% 58%; }
+  37.5% { background-position: 14% 40%; }
+  50% { background-position: 42% 24%; }
+  62.5% { background-position: 70% 11%; }
+  75% { background-position: 87% 32%; }
+  87.5% { background-position: 84% 69%; }
 }
 
 .auth-form {

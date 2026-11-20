@@ -18,4 +18,4 @@ The workspace controls use Adobe Spectrum icons. Tailwind CSS supplies layout ut
 
 The Cueia profile image is an original image of a folded terracotta paper loop generated for this dashboard. The rail mark was drawn in CSS. The sample conversation and its illustrative reminder were written for Cueia using the fictional North Pier invitation and event. The dashboard bundles DM Sans from Fontsource under the SIL Open Font License. [DM Sans](https://github.com/googlefonts/dm-fonts)
 
-The sign-in and sign-up pages share an original image of a terracotta paper sculpture on a sand-colored surface. It was generated for Cueia with OpenAI image generation and encoded as WebP in `apps/dashboard/app/assets/paper-orbit.webp`.
+The sign-in and sign-up pages share an [ASCII drawing of the paper loop](apps/dashboard/app/assets/paper-orbit.txt). It was derived from an [original image](apps/dashboard/app/assets/paper-orbit.webp) generated for Cueia with OpenAI image generation. The conversion isolates the terracotta sculpture from the sand background and uses character density and directional strokes to trace the folds.
