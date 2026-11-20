@@ -7,5 +7,9 @@
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "test": "bun test --pass-with-no-tests"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "22"
   }
 }

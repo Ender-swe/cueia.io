@@ -55,3 +55,9 @@ Build the guest command from `backend/` with `CGO_ENABLED=0 go build -o cueia-fi
 Set `VITE_CLERK_PUBLISHABLE_KEY` in `apps/dashboard/.env.local` to the publishable key for the Clerk instance used by that deployment. Configure the API's `CLERK_ISSUER` for the same instance and `CLERK_AUTHORIZED_PARTY` for the dashboard origin. For local sample development, use `http://127.0.0.1:5173` as the dashboard origin. Set signup to public, enable email addresses as a sign-in identifier, and enable password authentication. Enable Google and GitHub as social sign-in options. Use the live deployment's own instance settings and dashboard origin when deploying live.
 
 With the API running, start the dashboard with `cd apps/dashboard && bun run dev --port 5173 --strictPort` and open `http://127.0.0.1:5173`. Vite proxies API requests to loopback port 8080. Set `CUEIA_API_ORIGIN` to point the development or preview server at a different API. Keep API and provider credentials in the server environment. The dashboard build needs only the publishable key.
+
+### Interactive dashboard acceptance
+
+Build the dashboard with the Clerk test publishable key configured. Install Chromium from `apps/browser-worker` with `bunx playwright install chromium`. From `backend/`, run `go test ./cmd/api -run '^TestBrowserJourney$' -count=1 -v` with `CUEIA_TEST_DATABASE_URL` pointing at disposable PostgreSQL and `CUEIA_BROWSER_CLERK_ISSUER` set to the matching Clerk test issuer.
+
+The test starts an isolated sample workspace, serves the built dashboard on loopback, and opens a fresh Chromium window for sign-in. It writes a nested CSV directly to the internal provider's test disk and checks the Files and Tasks panels, signed PDF preview, keyboard focus, and draft preservation.
