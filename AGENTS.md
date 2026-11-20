@@ -20,6 +20,8 @@ Application build, run, and test commands will arrive with bootstrap. The propos
 
 Use lowercase, hyphen-separated change names such as `model-task-recovery`. Follow the existing proposal headings, including `Why`, `What Changes`, `Capabilities`, and `Impact`. Describe observable behavior and use numbered steps for acceptance scenarios.
 
+Use the [uncodixfy skill](.agents/skills/uncodixfy/SKILL.md) whenever creating or editing frontend UI.
+
 ### Illustrations
 
 When asked for an illustration in a design document or in chat, draw it in ASCII inside a fenced `text` block. For a screen, use `+`, `-`, and `|` to outline the relevant panes, place labels and controls where they appear, and fill in realistic content for the state being discussed.

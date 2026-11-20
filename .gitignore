@@ -8,3 +8,4 @@ scripts/start
 scripts/stop
 scripts/start-dashboard
 
+!/packages/ui/package.json

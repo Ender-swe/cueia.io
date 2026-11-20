@@ -13,3 +13,7 @@ The API contract uses OpenAPI. The planned identity and infrastructure integrati
 The Azure adapter uses Microsoft's Go SDK, Go's SSH implementation for private file access. [Azure SDK](https://github.com/Azure/azure-sdk-for-go) · [Go SSH](https://pkg.go.dev/golang.org/x/crypto/ssh)
 
 The dashboard uses Vite, React Router and Clerk's React SDK. [Vite](https://vite.dev/) · [React Router](https://reactrouter.com/) · [Clerk React SDK](https://github.com/clerk/javascript)
+
+The workspace controls use Adobe Spectrum icons. Tailwind CSS supplies layout utilities, and Motion for React handles panel fades. The uncodixfy project skill was supplied by the project owner.
+
+The Cueia profile image is an original image of a folded terracotta paper loop generated for this dashboard. The rail mark was drawn in CSS. The public sample conversation and its illustrative reminder were written for Cueia using the fictional North Pier invitation and event. The dashboard bundles DM Sans from Fontsource under the SIL Open Font License. [DM Sans](https://github.com/googlefonts/dm-fonts)

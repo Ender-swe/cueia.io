@@ -1,0 +1,14 @@
+@theme {
+  --color-canvas: #1b1b1a;
+  --color-surface: #20201f;
+  --color-raised: #2c2b29;
+  --color-line: #383734;
+  --color-ink: #f0ede8;
+  --color-muted: #aaa7a1;
+  --color-apricot: #e9aa83;
+  --color-sage: #b9dca2;
+}
+
+.cue-button { cursor: pointer; }
+.cue-button[data-disabled] { cursor: default; }
+.cue-input, .cue-textarea { min-width: 0; max-width: 100%; }

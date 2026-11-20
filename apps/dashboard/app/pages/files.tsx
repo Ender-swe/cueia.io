@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { AttachmentPreview } from "@cueia/components"
+import { SearchBox } from "../workspace-panels"
 import { api, type Schema } from "../api"
 
 export function Files({ token }: { token: string }) {
@@ -48,7 +49,7 @@ export function Files({ token }: { token: string }) {
   }
 
   return <>
-    <label>Search files<input type="search" value={query} onChange={e => setQuery(e.target.value)} /></label>
+    <SearchBox label="Search files" value={query} onChange={setQuery} />
     <div className="directory-controls">
       {directory !== "." && <button onClick={() => openDirectory(directory.split("/").slice(0, -1).join("/") || ".")}>Up</button>}
       <span>{directory === "." ? "Workspace" : directory}</span>
