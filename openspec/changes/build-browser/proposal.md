@@ -1,0 +1,38 @@
+# Cueia persistent browser sessions
+
+## Why
+
+An owner can read a page from chat, take over its browser, download a PDF, and return to the same profile later. A historical card must still explain what the agent saw even after the owner navigates elsewhere.
+
+## What Changes
+
+### Session and worker contract
+
+Package a separate Bun service with matched Playwright and Chromium versions as a target of the root Dockerfile. Keep its endpoint private and authenticate control requests with a server-held bearer token. Its health endpoint reports process liveness. The API verifies the owner, reserves a session UUID before contacting the worker, and exposes active, closed, error, disabled, or unreachable state as appropriate. Save title, last URL, update time, downloads, and profile data. Close releases the browser process. Reopen uses the same profile and the owner’s currently requested address.
+
+Provide operations to open, navigate, read, capture a screenshot, apply input, list/download PDFs, and close. A read returns the final URL, title, visible text up to 100,000 characters, and a truncation flag. Pair navigation with its read so simultaneous requests cannot attribute another page’s text to the caller. Store the observation with its original session, URL, title, and excerpt before returning a chat or task card.
+
+### Destination checks, console, and files
+
+- Allow public HTTP(S) pages on ports 80 and 443. Validate navigation, redirects, subrequests, and downloads. Reject non-public destinations, including mixed public/private DNS answers, and bind connections to an approved resolved address. A blocked request returns a visible failure.
+- Bound the worker to three active sessions, 20 saved profiles, a 30-minute idle close, a 20-second navigation deadline, and 64 KiB request bodies. Keep profile data private and persistent across worker restarts.
+- Issue an expiring owner-authorized console link. Support refresh without navigation, explicit reopen at an edited address, clicks scaled to screenshot pixels, supported keys, text entry, and scroll. Show disconnection, retain unsent text after failure, and suspend preview polling while hidden.
+- Accept up to 20 PDFs per session and 10 MiB per PDF. Check file signature and actual byte count before publication, validate the PDF before document import, and preserve bytes. Identify each download independently of its filename. Enforce one imported document per owner/session/download, including concurrent import requests. Return accepted files alongside rejected, oversized, or interrupted download outcomes. Recover incomplete transfers without exposing partial PDFs.
+
+### Acceptance with real Chromium
+
+1. Use a Cueia-authored pair of pages and PDF served by a test transport for an approved public destination. Keep production destination checks enabled. Open page A, set a profile preference, read it, then follow a link through the console to page B and download the PDF. The saved A card still names A and contains its excerpt.
+2. Concurrently import the download twice and verify one document with matching bytes. Interrupt another transfer, restart the worker with its profile volume, reopen the original session, and verify the saved preference and interruption record.
+3. Navigate to a fixture redirect ending at a private address and expect rejection. Present an expired console link, renew through the API, and verify the current page is unchanged. Disable the worker and confirm a read fails visibly without creating page evidence.
+
+## Capabilities
+
+### New Capabilities
+
+- `browser-sessions` covers public-page reads, persistent profiles, console takeover, and download import.
+
+### Modified Capabilities
+
+## Impact
+
+Workspace access owns authorization. The browser worker owns profiles and downloads. Documents owns imported bytes. Chat, watches, and the Computer screen consume observations and session controls.
