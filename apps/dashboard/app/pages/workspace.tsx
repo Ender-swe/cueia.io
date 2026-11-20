@@ -1,10 +1,10 @@
-import { useAuth, useClerk, RedirectToSignIn } from "@clerk/react"
+import { useAuth, useClerk } from "@clerk/react"
 import { useEffect, useState } from "react"
 import { api, type Schema } from "../api"
 import { Chat } from "./chat"
 
 export function WorkspacePage() {
-  const {isLoaded, isSignedIn, getToken, sessionId} = useAuth()
+  const {isSignedIn, getToken, sessionId} = useAuth()
   const {signOut} = useClerk()
   const [workspace,setWorkspace] = useState<{sessionId: string; token:string; data:Schema["Workspace"]} | null>(null)
   const [error,setError] = useState(false)
@@ -27,7 +27,6 @@ export function WorkspacePage() {
     return () => controller.abort()
   },[sessionId,isSignedIn,getToken,attempt])
 
-  if (isLoaded && !isSignedIn) return <RedirectToSignIn redirectUrl={window.location.origin + "/workspace"} />
   if (error) return <main className="entry" role="alert">Could not open your workspace. <button onClick={() => retry(n=>n+1)}>Retry</button></main>
   if (!workspace || workspace.sessionId !== sessionId) return <main className="entry" role="status">Opening your workspace…</main>
   return <Chat key={workspace.sessionId} data={workspace.data} token={workspace.token}

@@ -1,10 +1,12 @@
 import { useState } from "react"
+import { useClerk } from "@clerk/react"
 import { Chat } from "./pages/chat"
 import { sample } from "./sample-content"
 
-export function SampleWorkspace({ canSignIn }: { canSignIn: boolean }) {
+export function SampleWorkspace() {
   const [data, setData] = useState(sample)
-  return <Chat data={data} sampleMode canSignIn={canSignIn} onPreference={async timeFormat => {
+  const { signOut } = useClerk()
+  return <Chat data={data} sampleMode onSignOut={() => signOut({ redirectUrl: "/" })} onPreference={async timeFormat => {
     setData(current => ({ ...current, preferences: { ...current.preferences, timeFormat } }))
   }} />
 }

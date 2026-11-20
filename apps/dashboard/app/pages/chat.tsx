@@ -17,16 +17,17 @@ import type { Schema } from "../api"
 type Props = {
   data: Schema["Workspace"]
   onPreference: (format: string) => Promise<void>
+  onSignOut: () => Promise<void>
 } & (
-  | { sampleMode: true; canSignIn: boolean; token?: never; onSignOut?: never }
-  | { sampleMode?: false; canSignIn?: never; token: string; onSignOut: () => Promise<void> }
+  | { sampleMode: true; token?: never }
+  | { sampleMode?: false; token: string }
 )
 
 type LeftView = Exclude<WorkspaceView, "tasks">
 const panelNames = { chat: "Chats", find: "Find", files: "Files", ideas: "Ideas" }
 const newDraft = { text: "", file: null as File | null }
 
-export function Chat({ data, token, sampleMode, canSignIn, onPreference, onSignOut }: Props) {
+export function Chat({ data, token, sampleMode, onPreference, onSignOut }: Props) {
   const [left, setLeft] = useState<LeftView | null>(() => matchMedia(compactWorkspace).matches ? null : "chat")
   const [tasksOpen, setTasksOpen] = useState(() => !matchMedia(compactWorkspace).matches)
   const [menu, setMenu] = useState(false)
@@ -127,7 +128,7 @@ export function Chat({ data, token, sampleMode, canSignIn, onPreference, onSignO
             className="workspace-view context-panel" aria-label={panelNames[view]}>
             <PanelContent visible={left === view}>{panels[view]}</PanelContent>
             <div className="workspace-identity"><Lock />
-              {canSignIn ? <Link to="/workspace" aria-label="Open sample workspace">Sample workspace</Link> : sampleMode ? "Sample workspace" : "Private workspace"}
+              {sampleMode ? <Link to="/workspace" aria-label="Open sample workspace">Sample workspace</Link> : "Private workspace"}
             </div>
           </aside>)}
         </ResizableSidebar>
@@ -171,8 +172,8 @@ export function Chat({ data, token, sampleMode, canSignIn, onPreference, onSignO
             const value = e.target.value
             void save(() => onPreference(value), "Could not save preference.")
           }}><option value="12h">12 hour</option><option value="24h">24 hour</option></select></label>
-          {onSignOut && <Button isDisabled={saving} onPress={() => void save(onSignOut, "Could not sign out. Please retry.")}>Sign out</Button>}
-          {canSignIn && <Link to="/workspace">Open private workspace</Link>}
+          <Button isDisabled={saving} onPress={() => void save(onSignOut, "Could not sign out. Please retry.")}>Sign out</Button>
+          {sampleMode && <Link to="/workspace">Open private workspace</Link>}
           {error && <p role="alert">{error}</p>}
         </div></ModalContent>
       </Modal>}

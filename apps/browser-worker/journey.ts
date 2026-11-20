@@ -22,6 +22,10 @@ try {
     }
   })
   await page.goto(origin)
+  const signInHeading = page.getByRole("heading", {name:"Sign in to Cueia"})
+  const navigation = page.getByRole("navigation", {name:"Workspace"})
+  await expect(signInHeading).toBeVisible()
+  await expect(navigation).toHaveCount(0)
   if (email) {
     await signInTestAccount(page, email)
   }
@@ -38,6 +42,13 @@ try {
   await open.click()
   await expect(page.getByRole("heading",{name:"Main chat"})).toBeVisible({timeout:15000})
   await checkDashboard(page, origin, root)
+  await page.getByRole("button", {name:"Menu", exact:true}).click()
+  await page.getByRole("button", {name:"Sign out", exact:true}).click()
+  await expect(signInHeading).toBeVisible({timeout:15000})
+  await expect(navigation).toHaveCount(0)
+  await page.goto(origin + "/workspace")
+  await page.waitForURL(url => url.origin !== origin && url.pathname.includes("sign-in"))
+  await expect(navigation).toHaveCount(0)
   console.log("Dashboard journey passed.")
 } finally {
   await browser.close()
