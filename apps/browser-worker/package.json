@@ -1,0 +1,11 @@
+{
+  "name": "@cueia/browser-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "bun test --pass-with-no-tests"
+  }
+}

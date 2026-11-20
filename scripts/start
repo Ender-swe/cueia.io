@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in
+  sample|live) export CUEIA_MODE="$1" ;;
+  *) echo "usage: scripts/start sample|live" >&2; exit 2 ;;
+esac
+export COMPOSE_PROJECT_NAME="cueia-$CUEIA_MODE"
+docker compose build
+docker compose stop api worker
+docker compose up -d --wait postgres
+docker compose up --no-deps --force-recreate --exit-code-from migrate migrate
+docker compose up -d --no-deps api worker

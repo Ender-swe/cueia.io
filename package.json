@@ -1,0 +1,21 @@
+{
+  "name": "cueia",
+  "private": true,
+  "packageManager": "bun@1.3.10",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build build:go",
+    "type-check": "turbo run type-check type-check:go",
+    "test": "turbo run test test:go",
+    "build:go": "cd backend && go build ./cmd/...",
+    "type-check:go": "cd backend && go vet ./...",
+    "test:go": "cd backend && go test ./..."
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "turbo": "2.6.1"
+  }
+}
