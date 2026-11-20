@@ -1,0 +1,53 @@
+#!/bin/sh
+# Verify the Compose dependency gate against disposable sample and live databases.
+set -eu
+cd "$(dirname "$0")/.."
+fixture_dir=$(mktemp -d --suffix= --tmpdir cueia-gate-XXXXXXXX)
+export POSTGRES_PASSWORD=fixture
+export CUEIA_MODE
+export WORKSPACE_NETWORK="cueia-gate-$(basename "$fixture_dir" | tr A-Z a-z)"
+export COMPOSE_PROJECT_NAME
+export COMPOSE_FILE="compose.yaml:$fixture_dir/override.yaml"
+cleanup() {
+  if [ -n "${COMPOSE_PROJECT_NAME:-}" ]; then docker compose down --volumes >/dev/null; fi
+  docker network rm "$WORKSPACE_NETWORK" >/dev/null
+  rm -f "$fixture_dir/override.yaml" "$fixture_dir/999_failure.sql"
+  rmdir "$fixture_dir"
+}
+docker network create "$WORKSPACE_NETWORK" >/dev/null
+COMPOSE_PROJECT_NAME=
+trap cleanup EXIT
+printf '%s\n' "SELECT 1 / 0;" > "$fixture_dir/999_failure.sql"
+cat > "$fixture_dir/override.yaml" <<YAML
+services:
+  migrate:
+    volumes:
+      - $fixture_dir/999_failure.sql:/app/migrations/999_failure.sql:ro
+      - ./backend/migrations:/baseline:ro
+  api:
+    ports: !override
+      - "127.0.0.1::8080"
+YAML
+
+for CUEIA_MODE in sample live; do
+  COMPOSE_PROJECT_NAME="$WORKSPACE_NETWORK-$CUEIA_MODE"
+  docker compose build
+  docker compose up -d --wait postgres
+  docker compose run --rm -e MIGRATIONS_DIR=/baseline migrate
+  sql() { docker compose exec -T postgres psql -U cueia -d cueia -Atq -v ON_ERROR_STOP=1 -c "$1"; }
+  sql "WITH w AS (INSERT INTO workspaces DEFAULT VALUES RETURNING id)
+       INSERT INTO claim_records(workspace_id,status,version) SELECT id,'eligible',1 FROM w"
+  if docker compose up -d api worker; then
+    echo "application started despite failed migration" >&2
+    exit 1
+  fi
+  migrate_id=$(docker compose ps -aq migrate)
+  test "$(docker inspect -f '{{.State.Status}}' "$migrate_id")" = exited
+  test "$(docker inspect -f '{{.State.ExitCode}}' "$migrate_id")" -ne 0
+  docker compose logs migrate | grep -q '999_failure.sql:.*division by zero'
+  test -z "$(docker compose ps --status running -q api worker)"
+  test "$(sql "SELECT count(*) FROM claim_records WHERE status='eligible' AND version=1")" = 1
+  docker compose down --volumes
+  COMPOSE_PROJECT_NAME=
+  echo "$CUEIA_MODE migration gate passed"
+done
