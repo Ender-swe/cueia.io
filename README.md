@@ -32,6 +32,18 @@ bun run test
 
 Turbo builds the TypeScript packages in dependency order. The root tasks also run the Go build, vet, and test commands from `apps/server/`.
 
+## Start the local app
+
+With Bun 1.3.10 and Docker Compose installed, set `VITE_CLERK_PUBLISHABLE_KEY` in `apps/dashboard/.env.local` to your Clerk test publishable key. From the repository root, install dependencies once with `bun install --frozen-lockfile`, then run
+
+```sh
+bun start
+```
+
+The command starts PostgreSQL, applies migrations, starts the API and worker, and checks `http://127.0.0.1:8080/api/health`. It creates the local Docker network and keeps sample files in `~/.local/share/cueia/sample-disks`. Subsequent runs reuse the files and the `cueia-sample` database volume. If you previously configured a different password for that volume, export the same `POSTGRES_PASSWORD` before starting.
+
+Once the API is healthy, Vite starts the dashboard and opens `http://127.0.0.1:5173/workspace` in your default browser. The command prints the dashboard log path and returns your terminal prompt. To stop the dashboard and local Docker services, run `bun run stop` from the repository root. Your database and sample files persist. To start only the server, run `./scripts/start`.
+
 ## Starting a deployment
 
 Set `POSTGRES_PASSWORD` to a URL-safe secret and `WORKSPACE_NETWORK` to an existing Docker network with private connectivity to that deployment's workspace VMs. Configure `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTY`, and `CPK_INTELLIGENCE_API_KEY` for the API. Load the environment for the desired mode and run `scripts/start sample` or `scripts/start live`. Set `CUEIA_PORT` to distinct ports when running both simultaneously. Both publish the API on loopback.

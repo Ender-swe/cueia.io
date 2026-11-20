@@ -7,6 +7,8 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "./scripts/start && ./scripts/start-dashboard",
+    "stop": "./scripts/stop",
     "build": "turbo run build build:go",
     "type-check": "turbo run type-check type-check:go",
     "test": "turbo run test test:go",

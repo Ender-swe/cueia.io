@@ -3,3 +3,8 @@ dist/
 .turbo/
 /apps/dashboard/.env.local
 /apps/browser-worker/.env.local
+package.json
+scripts/start
+scripts/stop
+scripts/start-dashboard
+
