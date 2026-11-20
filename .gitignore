@@ -2,3 +2,4 @@ node_modules/
 dist/
 .turbo/
 /apps/dashboard/.env.local
+/apps/browser-worker/.env.local

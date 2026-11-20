@@ -2,6 +2,7 @@ import { chromium, expect } from "@playwright/test"
 import { createHash, randomUUID } from "node:crypto"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
+import { parseEnv } from "node:util"
 import expected from "./fixtures/north-pier-expected.json"
 
 const origin = process.env.CUEIA_DASHBOARD_ORIGIN ?? "http://127.0.0.1:5173"
@@ -9,7 +10,11 @@ const disk = process.env.CUEIA_TEST_DISKS
 const deployment = process.env.CUEIA_TEST_DEPLOYMENT
 if (!disk || !deployment) throw Error("Run the dashboard journey with the internal workspace provider")
 
-const browser = await chromium.launch({headless:false})
+const email = process.env.CUEIA_TEST_USER_EMAIL?.trim()
+if (email && !process.env.CLERK_SECRET_KEY?.startsWith("sk_test_")) {
+  throw Error("Automated Clerk login requires the test instance's CLERK_SECRET_KEY")
+}
+const browser = await chromium.launch({headless: Boolean(email)})
 try {
   const page = await browser.newPage({viewport:{width:1280,height:840}, locale:"en-US"})
   page.on("response", response => {
@@ -18,10 +23,19 @@ try {
     }
   })
   await page.goto(origin)
+  if (email) {
+    const { clerk, clerkSetup } = await import("@clerk/testing/playwright")
+    const frontendApiUrl = new URL(process.env.CUEIA_BROWSER_CLERK_ISSUER!).hostname
+    const publishableKey = process.env.VITE_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY ||
+      parseEnv(await readFile(new URL("../dashboard/.env.local", import.meta.url), "utf8")).VITE_CLERK_PUBLISHABLE_KEY
+    if (!publishableKey?.startsWith("pk_test_")) throw Error("Expected the dashboard's Clerk test publishable key")
+    await clerkSetup({ frontendApiUrl, publishableKey, dotenv: false })
+    await clerk.signIn({ page, emailAddress: email })
+  }
   const open = page.getByRole("link", {name:"Open sample workspace"})
   const snapshot = page.waitForResponse(r => r.url() === origin + "/api/workspace" && r.ok(), {timeout:300000})
   await open.click()
-  console.log("Complete sign-in in the Chromium window.")
+  if (!email) console.log("Complete sign-in in the Chromium window.")
   const {id} = await (await snapshot).json()
   const workspaceHash = createHash("sha256").update(JSON.stringify({Deployment:deployment, Workspace:id})).digest("hex")
   const root = join(disk, workspaceHash, "disk", "workspace")

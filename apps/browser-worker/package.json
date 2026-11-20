@@ -9,6 +9,7 @@
     "test": "bun test --pass-with-no-tests"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.3.4",
     "@playwright/test": "^1.65.1",
     "@types/node": "22"
   }
