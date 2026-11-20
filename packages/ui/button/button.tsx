@@ -13,7 +13,11 @@ export function Button({ className, ...props }: ButtonProps) {
     <ActionButton
       isQuiet
       {...props}
-      UNSAFE_className={cn("cue-button", props.UNSAFE_className, className)}
+      UNSAFE_className={cn(
+        "cursor-pointer data-disabled:cursor-default",
+        props.UNSAFE_className,
+        className,
+      )}
     />
   );
 }

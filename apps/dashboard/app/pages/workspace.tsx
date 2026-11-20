@@ -48,14 +48,20 @@ export function WorkspacePage() {
 
   if (error)
     return (
-      <main className="entry" role="alert">
+      <main
+        className="font-sans text-ink leading-normal [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md [&_a]:text-apricot min-h-dvh grid place-content-center gap-3 p-6"
+        role="alert"
+      >
         Could not open your workspace.{" "}
         <button onClick={() => retry((n) => n + 1)}>Retry</button>
       </main>
     );
   if (!workspace || workspace.sessionId !== sessionId)
     return (
-      <main className="entry" role="status">
+      <main
+        className="font-sans text-ink leading-normal [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md [&_a]:text-apricot min-h-dvh grid place-content-center gap-3 p-6"
+        role="status"
+      >
         Opening your workspace…
       </main>
     );

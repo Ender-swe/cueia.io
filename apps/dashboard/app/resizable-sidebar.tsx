@@ -55,7 +55,7 @@ export function ResizableSidebar({
   }>({});
 
   useLayoutEffect(() => {
-    const body = container.current!.closest(".workspace-body")!;
+    const body = container.current!.closest("[data-workspace-body]")!;
     const media = matchMedia(compactWorkspace);
     const measure = () =>
       setSpace({
@@ -63,6 +63,7 @@ export function ResizableSidebar({
         height: body.clientHeight,
         compact: media.matches,
       });
+
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(body);
@@ -91,16 +92,20 @@ export function ResizableSidebar({
     <div
       ref={container}
       hidden={!panel}
-      className={`resizable-sidebar ${side}-sidebar`}
+      className={
+        stacked
+          ? "relative flex-none min-h-0 h-(--pane-size)"
+          : "relative flex-none min-h-0 w-(--pane-size)"
+      }
       onKeyDown={(event) => {
         if (event.key === "Escape") onEscape?.();
       }}
-      style={stacked ? { height: size } : { width: size }}
+      style={{ "--pane-size": size + "px" } as React.CSSProperties}
     >
       {children}
       {panel && (
         <div
-          className="sidebar-divider"
+          className={`[--handle-width:10px] absolute z-1 inset-y-0 w-(--handle-width) cursor-col-resize touch-none select-none after:[content:''] after:absolute after:inset-[0_auto_0_50%] after:w-0.5 [&:hover::after]:bg-muted [&:active::after]:bg-muted focus-visible:[outline:none] [&:focus-visible::after]:bg-apricot pointer-coarse:[--handle-width:18px] ${context ? "left-[calc(100%-var(--handle-width)/2)] compact:inset-[auto_0_calc(var(--handle-width)_/_-2)] compact:w-auto compact:h-[var(--handle-width)] compact:cursor-row-resize compact:after:inset-[50%_0_auto] compact:after:w-auto compact:after:h-0.5" : "left-[calc(var(--handle-width)/-2)]"}`}
           role="separator"
           tabIndex={0}
           aria-labelledby={panel + "-panel"}

@@ -54,7 +54,9 @@ export function SampleConversation({ hour12 }: { hour12: boolean }) {
     hour12 ? `9:${minute} AM` : `09:${minute}`;
   return (
     <>
-      <div className="date-divider">Monday, October 12</div>
+      <div className="flex items-center justify-center gap-3.5 text-muted text-[12px] leading-5 before:[content:''] before:h-px before:bg-[#32312e] before:flex-1 after:[content:''] after:h-px after:bg-[#32312e] after:flex-1">
+        Monday, October 12
+      </div>
       <Turn author="You" stamp={stamp("41")}>
         What’s on my calendar for Saturday?
       </Turn>

@@ -66,6 +66,7 @@ export function Chat({
   const [drafts, setDrafts] = useState<Record<string, typeof newDraft>>({});
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const composer = useRef<HTMLDivElement>(null);
   const feed = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const hour12 = data.preferences.timeFormat !== "24h";
@@ -123,9 +124,7 @@ export function Chat({
       { id, title: "Side chat " + (items.length + 1) },
     ]);
     openChat(id);
-    document
-      .querySelector<HTMLTextAreaElement>(".draft-composer textarea")
-      ?.focus();
+    composer.current?.querySelector("textarea")?.focus();
   }
 
   function updateDraft(change: Partial<typeof newDraft>) {
@@ -154,7 +153,7 @@ export function Chat({
         <SearchBox label="Search chats" value={search} onChange={setSearch} />
         {matches("Main chat") && (
           <button
-            className="thread-link"
+            className="flex items-center gap-2.5 w-full min-h-9.5 py-1.75 px-2.75 bg-transparent border-0 rounded-md text-left wrap-anywhere text-[14px] font-label first-of-type:mt-2 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:text-muted aria-[current=page]:bg-thread-selected [&[aria-current=page]_svg]:text-apricot hover:bg-raised"
             aria-current={active === "main" ? "page" : undefined}
             onClick={() => openChat("main")}
           >
@@ -162,10 +161,10 @@ export function Chat({
             Main chat
           </button>
         )}
-        <div className="side-chats-heading">
+        <div className="flex items-center justify-between pl-2.5 mt-2.25 [&_h2]:text-[13px] [&_h2]:font-label [&_h2]:text-muted">
           <h2>Side chats</h2>
           <Button
-            className="icon-button"
+            className="inline-flex items-center justify-center flex-none border-0 min-w-0 size-8 p-0 rounded-[7px] text-muted bg-transparent hover:text-ink hover:bg-[#373633]"
             aria-label="New side chat"
             onPress={createSideChat}
           >
@@ -175,7 +174,7 @@ export function Chat({
         {visibleSideChats.map((item) => (
           <button
             key={item.id}
-            className="thread-link"
+            className="flex items-center gap-2.5 w-full min-h-9.5 py-1.75 px-2.75 bg-transparent border-0 rounded-md text-left wrap-anywhere text-[14px] font-label first-of-type:mt-2 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:text-muted aria-[current=page]:bg-thread-selected [&[aria-current=page]_svg]:text-apricot hover:bg-raised"
             aria-current={active === item.id ? "page" : undefined}
             onClick={() => openChat(item.id)}
           >
@@ -184,27 +183,27 @@ export function Chat({
           </button>
         ))}
         {!matches("Main chat") && !visibleSideChats.length && (
-          <p className="empty-state">No matching chats.</p>
+          <p className="text-[13px] text-muted">No matching chats.</p>
         )}
       </>
     ),
     files: (
       <>
-        <h2 className="panel-title">Files</h2>
+        <h2 className="py-1 px-2 text-[16px] font-semibold">Files</h2>
         {sampleMode ? <SampleFiles /> : <Files token={token} />}
       </>
     ),
     find: <FindPanel data={data} onSelect={openChat} />,
     ideas: (
       <>
-        <h2 className="panel-title">Ideas</h2>
-        <p className="empty-state">No ideas yet.</p>
+        <h2 className="py-1 px-2 text-[16px] font-semibold">Ideas</h2>
+        <p className="text-[13px] text-muted">No ideas yet.</p>
       </>
     ),
   };
 
   return (
-    <main className="workspace">
+    <main className="font-sans text-ink flex isolate h-dvh min-h-0 bg-canvas text-interface [font-synthesis:none] [&_:where(svg)]:shrink-0 [&_:where(svg)]:size-4.5">
       <WorkspaceNavigation
         expanded={{ ...(left ? { [left]: true } : {}), tasks: tasksOpen }}
         onSelect={select}
@@ -214,8 +213,8 @@ export function Chat({
           setError("");
         }}
       />
-      <div className="workspace-body">
-        <div className="chat-area">
+      <div data-workspace-body className="flex min-h-0 min-w-0 flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 compact:flex-col">
           <ResizableSidebar
             side="context"
             panel={left}
@@ -230,13 +229,13 @@ export function Chat({
                 key={view}
                 id={view + "-panel"}
                 hidden={left !== view}
-                className="workspace-view context-panel"
+                className="[[hidden]]:hidden h-full overflow-y-auto min-w-0 scrollbar-thin [&_label]:grid [&_label]:gap-2 [&_label]:text-[14px] [&_label_>_input]:w-full [&_label_>_input]:bg-raised [&_label_>_input]:p-2 [&_label_>_input]:[border:1px_solid_#53514b] [&_label_>_input]:rounded-md flex flex-col [border-right:1px_solid_var(--color-line)] bg-panel compact:[border-right:0] compact:[border-bottom:1px_solid_var(--color-line)]"
                 aria-label={panelNames[view]}
               >
                 <PanelContent visible={left === view}>
                   {panels[view]}
                 </PanelContent>
-                <div className="workspace-identity">
+                <div className="mt-auto flex items-center gap-2 py-4.5 px-5.75 text-muted text-[12px] [&_svg]:w-3.25 [&_svg]:h-3.25 [&_a]:text-inherit [&_a]:no-underline [&_a:hover]:underline compact:hidden">
                   <Lock />
                   {sampleMode ? (
                     <Link to="/workspace" aria-label="Open sample workspace">
@@ -249,13 +248,20 @@ export function Chat({
               </aside>
             ))}
           </ResizableSidebar>
-          <section className="conversation" aria-label={title}>
-            <header className="conversation-heading">
+          <section
+            className="flex min-h-0 min-w-0 flex-1 flex-col @container/conversation"
+            aria-label={title}
+          >
+            <header className="flex items-center flex-none gap-2.5 h-15.5 px-7 [border-bottom:1px_solid_var(--color-line)] [&_h1]:text-[17px] [&_h1]:font-semibold [&_h1]:tracking-tight [&_svg]:text-muted [&_svg]:w-4.25 [&_svg]:h-4.25 compact:h-12.5 compact:px-4">
               <ChatIcon />
               <h1>{title}</h1>
             </header>
-            <div className="feed" tabIndex={-1} ref={feed}>
-              <div className="reading-column">
+            <div
+              className="min-h-0 flex-1 overflow-y-auto px-[clamp(18px,4.5cqw,40px)] scrollbar-thin wrap-anywhere focus:[outline:none]"
+              tabIndex={-1}
+              ref={feed}
+            >
+              <div className="w-[min(100%,720px)] mx-auto py-6.5 flex flex-col gap-[clamp(20px,3vh,31px)] compact:py-4.5 compact:gap-4.5">
                 {active === "main" &&
                   (sampleMode ? (
                     <SampleConversation hour12={hour12} />
@@ -276,19 +282,19 @@ export function Chat({
                 {thread && <Correspondence {...thread} />}
                 {event && <CalendarEntry {...event} hour12={hour12} />}
                 {sideChat && (
-                  <p className="empty-state side-chat-empty">
+                  <p className="text-[13px] text-muted text-center">
                     Start a draft in {sideChat.title.toLowerCase()}.
                   </p>
                 )}
               </div>
             </div>
-            <div className="composer-region">
+            <div className="flex-none p-[8px_clamp(14px,3.5cqw,32px)_max(12px,env(safe-area-inset-bottom))]">
               {draft.file && (
-                <div className="draft-file">
+                <div className="flex items-center gap-1.5 text-apricot text-[13px] my-[0_6px] wrap-anywhere w-[min(100%,744px)] mx-auto">
                   <Attach />
                   {draft.file.name}
                   <Button
-                    className="icon-button"
+                    className="inline-flex items-center justify-center flex-none border-0 min-w-0 size-8 p-0 rounded-[7px] text-muted bg-transparent hover:text-ink hover:bg-[#373633]"
                     aria-label="Remove attachment"
                     onPress={() => updateDraft({ file: null })}
                   >
@@ -307,6 +313,7 @@ export function Chat({
                 }}
               />
               <DraftComposer
+                composerRef={composer}
                 draft={draft.text}
                 onChange={(text) => updateDraft({ text })}
                 onAttach={() => fileInput.current?.click()}
@@ -328,7 +335,7 @@ export function Chat({
           <aside
             id="tasks-panel"
             hidden={!tasksOpen}
-            className="workspace-view tasks-panel"
+            className="[[hidden]]:hidden h-full overflow-y-auto min-w-0 scrollbar-thin [&_label]:grid [&_label]:gap-2 [&_label]:text-[14px] [&_label_>_input]:w-full [&_label_>_input]:bg-raised [&_label_>_input]:p-2 [&_label_>_input]:[border:1px_solid_#53514b] [&_label_>_input]:rounded-md [border-left:1px_solid_var(--color-line)] bg-panel compact:wrap-anywhere"
             aria-label="Tasks"
           >
             <TaskDetails
@@ -349,10 +356,11 @@ export function Chat({
           <Modal isDismissible size="S">
             <Heading>Preferences</Heading>
             <ModalContent>
-              <div className="workspace-preferences">
-                <label>
+              <div className="font-sans text-ink leading-normal grid justify-items-start gap-4 [&_a]:text-apricot">
+                <label className="grid gap-2 text-[14px]">
                   Time format
                   <select
+                    className="w-full bg-raised p-2 [border:1px_solid_#53514b] rounded-md"
                     disabled={saving}
                     value={data.preferences.timeFormat ?? "12h"}
                     onChange={(e) => {

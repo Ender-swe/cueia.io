@@ -17,7 +17,7 @@ Two marks identify Cueia. Three open apricot rings form the small mark at the to
 | Apricot (#E9AA83)                                                            | The brand mark, active Chat control, selected thread icon, attachment names, task link, and keyboard focus share this accent. |
 | Pale sage (#B9DCA2)                                                          | A small dot beside “Connected” in the sample workspace. The private workspace pairs a stone dot with “Agent disconnected.”    |
 
-The shared palette and the workspace-specific shades are defined in the [theme](packages/ui/tailwind.css) and [workspace stylesheet](apps/dashboard/app/workspace.css).
+The [Tailwind theme](packages/ui/tailwind.css) defines the palette and typography. Apply component styles with Tailwind utilities in JSX through `className` or the library’s class-name prop. The [global stylesheet](apps/dashboard/app/global.css) contains document defaults, responsive variants, and keyframes.
 
 ## 3. Typography rules
 

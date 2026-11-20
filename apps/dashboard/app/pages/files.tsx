@@ -74,7 +74,7 @@ export function Files({ token }: { token: string }) {
   return (
     <>
       <SearchBox label="Search files" value={query} onChange={setQuery} />
-      <div className="directory-controls">
+      <div className="flex flex-wrap gap-1.5 items-center my-2 text-[13px] [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md">
         {directory !== "." && (
           <button
             onClick={() =>
@@ -84,7 +84,9 @@ export function Files({ token }: { token: string }) {
             Up
           </button>
         )}
-        <span>{directory === "." ? "Workspace" : directory}</span>
+        <span className="flex-1">
+          {directory === "." ? "Workspace" : directory}
+        </span>
         <button onClick={() => refresh((n) => n + 1)}>Refresh</button>
       </div>
       {error && <p role="alert">{error}</p>}
@@ -92,9 +94,12 @@ export function Files({ token }: { token: string }) {
       {entries?.length === 0 && (
         <p>{name ? "No matching files." : "This directory is empty."}</p>
       )}
-      <ul className="file-list">
+      <ul className="[list-style:none] p-0 text-[14px] [&_button]:max-w-full [&_button]:py-1 [&_button]:px-0 [&_button]:text-left [&_button]:bg-transparent [&_button]:border-0 [&_button]:wrap-anywhere [&_button:hover]:underline">
         {entries?.map((entry) => (
-          <li key={entry.path}>
+          <li
+            className="[border-top:1px_solid_var(--color-line)] py-2 wrap-anywhere"
+            key={entry.path}
+          >
             {entry.kind === "directory" ? (
               <button onClick={() => openDirectory(entry.path)}>
                 {entry.name}/
@@ -106,7 +111,7 @@ export function Files({ token }: { token: string }) {
             ) : (
               <span>{entry.name}</span>
             )}
-            {name && <small>{entry.path}</small>}
+            {name && <small className="block text-muted">{entry.path}</small>}
           </li>
         ))}
       </ul>

@@ -26,9 +26,9 @@ export function TaskDetails({
   const time = sampleMode ? reminderTime(hour12) : "";
   return (
     <>
-      <div className="agent-profile">
+      <div className="relative flex flex-col items-center p-[56px_16px_29px] [&_h2]:mt-3.25 [&_h2]:text-[23px] [&_h2]:leading-tight [&_h2]:font-semibold [&_h2]:tracking-[-0.04em] compact:p-[48px_5px_20px]">
         <Button
-          className="icon-button close-tasks"
+          className="inline-flex items-center justify-center flex-none border-0 min-w-0 size-8 p-0 rounded-[7px] text-muted bg-transparent hover:text-ink hover:bg-[#373633] absolute top-3.25 right-3.25"
           aria-label="Close Tasks"
           onPress={onClose}
         >
@@ -36,49 +36,65 @@ export function TaskDetails({
         </Button>
         <AgentAvatar large />
         <h2>Cueia</h2>
-        <div className="connection-state">
-          <i className={sampleMode ? "connected" : ""} />
+        <div className="flex items-center gap-1.75 mt-1.25 text-[13px] text-muted [&_i]:inline-block [&_i]:w-1.75 [&_i]:h-1.75 [&_i]:rounded-full compact:text-center compact:gap-1">
+          <i className={sampleMode ? "bg-sage" : "bg-muted"} />
           {sampleMode ? "Connected" : "Agent disconnected"}
         </div>
       </div>
-      <section className="inspector-section">
+      <section className="my-0 mx-4.75 py-5.5 px-0.5 [border-top:1px_solid_var(--color-line)] [&_h3]:flex [&_h3]:items-center [&_h3]:gap-2 [&_h3]:mb-4 [&_h3]:text-[14px] [&_h3]:font-semibold compact:mx-[9px] compact:py-3.5 compact:[&_h3]:block compact:[&_h3]:text-[13px]">
         <h3>
           Scheduled tasks
-          {sampleMode && <span className="task-count"> (1)</span>}
+          {sampleMode && (
+            <span className="text-muted font-medium text-[12px] whitespace-nowrap compact:ml-1">
+              {" "}
+              (1)
+            </span>
+          )}
         </h3>
         {sampleMode ? (
           <>
-            <div className="task-row">
+            <div className="flex items-start gap-2.75 [&>svg]:w-4.25 [&>svg]:h-4.25 [&>svg]:mt-0.75 [&>svg]:text-apricot [&_p_span]:mx-0.5 [&_small]:block [&_small]:mt-1.5 [&_small]:text-caption [&_small]:text-muted compact:grid compact:gap-1.5">
               <Bell />
               <div>
-                <strong>Workshop reminder</strong>
-                <p>
+                <strong className="block text-interface font-label compact:text-[14px]">
+                  Workshop reminder
+                </strong>
+                <p className="mt-0.5 text-[13px] leading-[1.45] text-muted">
                   Sat, Oct 17 <span>·</span> {time}
                 </p>
               </div>
             </div>
-            <Button className="all-tasks" onPress={() => setAllTasks(true)}>
+            <Button
+              className="inline-flex justify-start items-center gap-1 m-[9px_0_0_22px] p-1.25 border-0 text-apricot bg-transparent text-[12px] font-medium [&_svg]:w-3 [&_svg]:h-3 hover:underline compact:whitespace-normal compact:ml-0 compact:text-left"
+              onPress={() => setAllTasks(true)}
+            >
               See all scheduled tasks
               <Chevron />
             </Button>
           </>
         ) : (
-          <p className="empty-state">No scheduled tasks.</p>
+          <p className="text-[13px] text-muted">No scheduled tasks.</p>
         )}
       </section>
-      <section className="inspector-section">
+      <section className="my-0 mx-4.75 py-5.5 px-0.5 [border-top:1px_solid_var(--color-line)] [&_h3]:flex [&_h3]:items-center [&_h3]:gap-2 [&_h3]:mb-4 [&_h3]:text-[14px] [&_h3]:font-semibold compact:mx-[9px] compact:py-3.5 compact:[&_h3]:block compact:[&_h3]:text-[13px]">
         <h3>{sampleMode ? "Today" : "Today's activity"}</h3>
         {sampleMode ? (
-          <div className="task-row activity">
+          <div className="flex items-start gap-2.75 [&>svg]:w-4.25 [&>svg]:h-4.25 [&>svg]:mt-0.75 [&>svg]:text-muted [&_p_span]:mx-0.5 compact:grid compact:gap-1.5">
             <Check />
             <div>
-              <strong>Scheduled reminder</strong>
-              <p>North Pier mapmaking workshop</p>
-              <small>{hour12 ? "9:42 AM" : "09:42"}</small>
+              <strong className="block text-interface font-label compact:text-[14px]">
+                Scheduled reminder
+              </strong>
+              <p className="mt-0.5 text-[13px] leading-[1.45] text-muted">
+                North Pier mapmaking workshop
+              </p>
+              <small className="block mt-1.5 text-caption text-muted">
+                {hour12 ? "9:42 AM" : "09:42"}
+              </small>
             </div>
           </div>
         ) : (
-          <p className="empty-state">No activity yet.</p>
+          <p className="text-[13px] text-muted">No activity yet.</p>
         )}
       </section>
       <ModalContainer onDismiss={() => setAllTasks(false)}>
@@ -86,10 +102,14 @@ export function TaskDetails({
           <Modal size="S" isDismissible>
             <Heading>Scheduled tasks</Heading>
             <ModalContent>
-              <div className="task-summary">
+              <div className="font-sans text-ink leading-normal">
                 <strong>Workshop reminder</strong>
-                <p>Saturday, October 17 at {time} · America/Chicago</p>
-                <p>30 minutes before the North Pier mapmaking workshop.</p>
+                <p className="text-muted">
+                  Saturday, October 17 at {time} · America/Chicago
+                </p>
+                <p className="text-muted">
+                  30 minutes before the North Pier mapmaking workshop.
+                </p>
               </div>
             </ModalContent>
           </Modal>

@@ -19,7 +19,7 @@ export function AttachmentPreview({
               title={attachment.filename}
               src={attachment.signedUrl}
               referrerPolicy="no-referrer"
-              style={{ width: "100%", height: "65vh", border: 0 }}
+              className="h-[65vh] w-full border-0"
             />
           </ModalContent>
         </Modal>

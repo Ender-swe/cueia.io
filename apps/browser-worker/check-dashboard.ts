@@ -79,7 +79,9 @@ export async function checkDashboard(page: Page, origin: string, root: string) {
   const nav = page.getByRole("navigation", { name: "Workspace" });
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 840 });
-    const content = await page.locator(".conversation").boundingBox();
+    const content = await page
+      .getByRole("region", { name: "Main chat" })
+      .boundingBox();
     if (!content) throw Error("Missing chat view");
     let bottom = 0;
     for (const name of ["Chat", "Files", "Tasks"]) {

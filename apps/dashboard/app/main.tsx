@@ -19,13 +19,13 @@ import { AuthPage, authLocalization } from "./pages/auth";
 import { WorkspacePage } from "./pages/workspace";
 import { SampleWorkspace } from "./sample-workspace";
 import "@fontsource-variable/dm-sans";
-import "./workspace.css";
+import "./global.css";
 
 function RequireSignIn() {
   const { isLoaded, isSignedIn, sessionId } = useAuth();
   if (!isLoaded)
     return (
-      <main className="entry">
+      <main className="font-sans text-ink leading-normal [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md [&_a]:text-apricot min-h-dvh grid place-content-center gap-3 p-6">
         <ClerkLoading>
           <p role="status">Checking sign-in…</p>
         </ClerkLoading>
@@ -71,7 +71,10 @@ function Dashboard() {
           </Routes>
         </ClerkProvider>
       ) : (
-        <main className="entry" role="alert">
+        <main
+          className="font-sans text-ink leading-normal [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md [&_a]:text-apricot min-h-dvh grid place-content-center gap-3 p-6"
+          role="alert"
+        >
           Set VITE_CLERK_PUBLISHABLE_KEY to enable sign-in.
         </main>
       )}

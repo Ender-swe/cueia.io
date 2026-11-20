@@ -7,16 +7,19 @@
   --color-muted: #aaa7a1;
   --color-apricot: #e9aa83;
   --color-sage: #b9dca2;
-}
-
-.cue-button {
-  cursor: pointer;
-}
-.cue-button[data-disabled] {
-  cursor: default;
-}
-.cue-input,
-.cue-textarea {
-  min-width: 0;
-  max-width: 100%;
+  --color-rail: #191918;
+  --color-panel: #1e1e1d;
+  --color-ash: #292927;
+  --color-umber: #503b30;
+  --color-cream: #f6eee7;
+  --color-composer: #302f2c;
+  --color-nav-selected: #33312e;
+  --color-thread-selected: #33322f;
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  --text-interface: 15px;
+  --text-interface--line-height: 1.5;
+  --text-message: 16px;
+  --text-message--line-height: 1.55;
+  --text-caption: 11px;
+  --font-weight-label: 550;
 }

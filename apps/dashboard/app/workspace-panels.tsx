@@ -16,7 +16,7 @@ export function SearchBox({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="search-box">
+    <div className="relative [&>svg]:absolute [&>svg]:z-1 [&>svg]:left-2.75 [&>svg]:top-2.5 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:pointer-events-none [&>svg]:text-muted [&_input]:ps-6.75">
       <Search aria-hidden="true" />
       <Input
         type="search"
@@ -57,18 +57,20 @@ export function FindPanel({
   return (
     <>
       <SearchBox label="Find in workspace" value={query} onChange={setQuery} />
-      <h2 className="panel-title">Find</h2>
+      <h2 className="py-1 px-2 text-[16px] font-semibold">Find</h2>
       {entries.map((entry) => (
         <button
-          className="result-row"
+          className="flex items-start gap-0.75 w-full min-h-9.5 py-1.75 px-2.75 bg-transparent border-0 rounded-md text-left wrap-anywhere hover:bg-raised flex-col text-[14px]"
           key={entry.id}
           onClick={() => onSelect(entry.id)}
         >
-          <small>{entry.type}</small>
+          <small className="text-[13px] text-muted">{entry.type}</small>
           {entry.title}
         </button>
       ))}
-      {!entries.length && <p className="empty-state">No matching records.</p>}
+      {!entries.length && (
+        <p className="text-[13px] text-muted">No matching records.</p>
+      )}
     </>
   );
 }
@@ -80,12 +82,15 @@ export function SampleFiles() {
     <>
       <SearchBox label="Search files" value={query} onChange={setQuery} />
       {samplePdf.filename.includes(query.trim().toLowerCase()) ? (
-        <button className="result-row file-row" onClick={() => setOpen(true)}>
+        <button
+          className="flex items-start gap-0.75 w-full min-h-9.5 py-1.75 px-2.75 bg-transparent border-0 rounded-md text-left wrap-anywhere hover:bg-raised flex-row text-[14px] [&_small]:text-[13px] [&_small]:text-muted"
+          onClick={() => setOpen(true)}
+        >
           <File />
           {samplePdf.filename}
         </button>
       ) : (
-        <p className="empty-state">No matching files.</p>
+        <p className="text-[13px] text-muted">No matching files.</p>
       )}
       <AttachmentPreview
         attachment={open ? samplePdf : null}

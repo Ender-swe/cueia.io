@@ -6,7 +6,6 @@ import Play from "@react-spectrum/s2/icons/Play";
 import { useState, type ComponentProps, type CSSProperties } from "react";
 import { Navigate, useMatch, useSearchParams } from "react-router";
 import paperOrbit from "../assets/paper-orbit.txt?raw";
-import "../auth.css";
 
 export const authLocalization = {
   signIn: {
@@ -45,15 +44,18 @@ const appearance: ComponentProps<typeof SignIn>["appearance"] = {
     borderRadius: "0.5rem",
   },
   elements: {
-    rootBox: "auth-widget",
-    cardBox: "auth-card-box",
-    card: "auth-card",
-    header: "auth-heading",
-    headerTitle: "auth-title",
-    socialButtonsBlockButton: "auth-social-button",
-    formFieldInput: "auth-input",
-    formButtonPrimary: "auth-primary",
-    footer: "auth-footer",
+    rootBox: "w-full max-w-full",
+    cardBox:
+      "w-full max-w-full overflow-visible bg-transparent border-0 rounded-none shadow-none",
+    card: "bg-transparent border-0 rounded-none shadow-none p-0 gap-7 compact-auth:gap-3",
+    header: "items-start text-left",
+    headerTitle: "text-[23px] leading-[1.25] tracking-[-0.04em] font-semibold",
+    socialButtonsBlockButton:
+      "min-h-11 rounded-lg bg-ash text-ink [border:1px_solid_var(--color-line)] shadow-none hover:bg-thread-selected",
+    formFieldInput: "min-h-11 rounded-lg",
+    formButtonPrimary: "min-h-11 rounded-lg",
+    footer:
+      "bg-transparent border-0 rounded-none shadow-none p-[24px_0_0] [&_.cl-footerAction]:px-0 [&_.cl-footerActionLink]:whitespace-nowrap compact-auth:pt-3",
   },
 };
 
@@ -82,13 +84,13 @@ function PaperOrbit() {
   const [turnAngle, setTurnAngle] = useState(randomTurnAngle);
   const style: CSSProperties & { "--turn-angle": string } = {
     "--turn-angle": turnAngle,
-    animationPlayState: paused ? "paused" : "running",
   };
 
   return (
-    <div className="auth-art">
+    <div className="col-2 row-span-full @container grid place-items-center overflow-clip bg-surface [border-inline-start:1px_solid_var(--color-line)] compact:hidden">
       <pre
         aria-hidden="true"
+        className={`[grid-area:1/1] m-0 text-apricot font-mono text-[min(1.7cqw,1rem)] leading-[1.05] font-normal [font-variant-ligatures:none] select-none animated-art:[background-image:radial-gradient(_ellipse_24%_23%,_var(--color-ink),_var(--color-apricot)_48%,_color-mix(in_srgb,_var(--color-apricot)_64%,_var(--color-surface))_)] animated-art:[background-size:200%_200%] animated-art:[background-clip:text] animated-art:text-transparent animated-art:[animation:paper-orbit-light_8s_linear_infinite,_paper-orbit-turn_16s_ease-in-out_infinite] ${paused ? "[animation-play-state:paused]!" : ""}`}
         style={style}
         onAnimationIteration={(event) => {
           if (event.animationName === "paper-orbit-turn")
@@ -98,7 +100,7 @@ function PaperOrbit() {
         {paperOrbit.trimEnd()}
       </pre>
       <Button
-        className="auth-art-control"
+        className="hidden [grid-area:1/1] place-self-end m-3 focus-visible:[outline:2px_solid_var(--color-apricot)] focus-visible:outline-offset-2 animated-art:inline-flex"
         aria-label={
           paused ? "Play artwork animation" : "Pause artwork animation"
         }
@@ -126,24 +128,24 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
     ? "?" + new URLSearchParams({ redirect_url: destination.href })
     : "";
   const fallback = (
-    <p className="auth-status" role="status">
+    <p className="m-0 text-muted" role="status">
       Loading {signingIn ? "sign-in" : "sign-up"}…
     </p>
   );
 
   return (
-    <main className="auth-page">
+    <main className="grid grid-cols-[minmax(0,1fr)_min(50%,75svh)] grid-rows-[minmax(3rem,4fr)_auto_minmax(0,1fr)] min-h-svh bg-canvas text-ink font-sans text-interface font-normal compact:grid-cols-[minmax(0,_1fr)]">
       <title>
         {signingIn ? "Sign in to Cueia" : "Create your Cueia account"}
       </title>
-      <header className="auth-brand">
-        <span className="auth-wordmark">
-          <CueiaMark />
+      <header className="@container-size grid place-items-center">
+        <span className="select-none inline-flex items-center gap-[0.28em] text-[clamp(1.5rem,min(16cqw,68cqh),5.5rem)] leading-none font-semibold tracking-[-0.04em]">
+          <CueiaMark className="text-[1.15em] size-[1em]" />
           Cueia
         </span>
       </header>
       <section
-        className="auth-form"
+        className="row-2 self-center w-[min(368px,calc(100%-64px))] my-2 mx-auto min-w-0 [&_:is(button,a,input):focus-visible]:[outline:2px_solid_var(--color-apricot)] [&_:is(button,a,input):focus-visible]:outline-offset-2 compact:w-[min(368px,_calc(100%_-_48px))] compact-auth:[&_.cl-form]:gap-3 compact-auth:[&_.cl-main]:gap-2 compact-auth:[&_.cl-form_:has(>_.cl-formFieldRow)]:gap-y-2 compact-auth:[&_.cl-formField_:has(>_.cl-formFieldLabelRow)]:gap-y-1 compact-auth:[&_.cl-footerAction]:py-2 compact-auth:[&_.cl-footerItem]:py-2"
         aria-label={signingIn ? "Sign in" : "Sign up"}
       >
         {signingIn ? (
@@ -166,7 +168,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
           />
         )}
         <ClerkFailed>
-          <p className="auth-status" role="alert">
+          <p className="m-0 text-muted" role="alert">
             Sign-in couldn’t load. Refresh the page to try again.
           </p>
         </ClerkFailed>
