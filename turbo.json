@@ -26,7 +26,7 @@
     },
     "//#build:go": {
       "inputs": [
-        "backend/**"
+        "apps/server/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -37,7 +37,7 @@
     },
     "//#type-check:go": {
       "inputs": [
-        "backend/**"
+        "apps/server/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -48,7 +48,7 @@
     },
     "//#test:go": {
       "inputs": [
-        "backend/**"
+        "apps/server/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -65,7 +65,7 @@
     "@cueia/api-types#type-check": {
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/backend/api/openapi.yaml"
+        "$TURBO_ROOT$/apps/server/api/openapi.yaml"
       ]
     }
   }

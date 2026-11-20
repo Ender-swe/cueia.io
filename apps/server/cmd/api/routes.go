@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/jackc/pgx/v5"
 )
 

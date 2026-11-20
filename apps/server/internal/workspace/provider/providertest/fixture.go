@@ -8,13 +8,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/volume"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/volume"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 )
 
 type Fixture struct {

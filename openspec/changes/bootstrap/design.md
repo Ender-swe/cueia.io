@@ -23,28 +23,28 @@ apps/
       workspace/      # Main chat, Files sidebar, Tasks panel, and workspace preferences
   browser-worker/     # Bun process that runs Playwright
     package.json
+  server/
+    cmd/
+      api/main.go       # Register routes and middleware, start and shut down HTTP
+      worker/main.go    # Connect the worker to the shared claim operation
+      migrate/main.go   # Run pending SQL migrations and exit
+    internal/
+      config/           # Parse and validate environment settings
+      database/         # Open the pgx pool and run versioned migrations
+      middleware/       # Authenticate private requests, check origins, rate-limit attempts
+      session/          # Exchange Clerk credentials, issue and revoke Cueia sessions
+      workspace/        # Provision the owner's VM, browse files, read snapshots, update preferences
+      document/         # Publish attachment bytes, serve reads, sign and verify previews
+      claim/            # Claim an eligible record at its expected version
+    api/openapi.yaml    # HTTP contract used to generate TypeScript client types
+    migrations/         # Versioned SQL files for both sample and live deployments
+    go.mod
+    go.sum
 packages/
   components/         # Reusable Adobe React Spectrum 2 UI, including the preview dialog
     package.json
-  api-types/          # TypeScript types generated from backend/api/openapi.yaml
+  api-types/          # TypeScript types generated from apps/server/api/openapi.yaml
     package.json
-backend/
-  cmd/
-    api/main.go       # Register routes and middleware, start and shut down HTTP
-    worker/main.go    # Connect the worker to the shared claim operation
-    migrate/main.go   # Run pending SQL migrations and exit
-  internal/
-    config/           # Parse and validate environment settings
-    database/         # Open the pgx pool and run versioned migrations
-    middleware/       # Authenticate private requests, check origins, rate-limit attempts
-    session/          # Exchange Clerk credentials, issue and revoke Cueia sessions
-    workspace/        # Provision the owner's VM, browse files, read snapshots, update preferences
-    document/         # Publish attachment bytes, serve reads, sign and verify previews
-    claim/            # Claim an eligible record at its expected version
-  api/openapi.yaml    # HTTP contract used to generate TypeScript client types
-  migrations/         # Versioned SQL files for both sample and live deployments
-  go.mod
-  go.sum
 package.json          # Bun version, workspace membership, and root commands
 bun.lock              # Dependency lockfile for all TypeScript workspaces
 turbo.json            # Build, type-check, and test tasks
@@ -55,7 +55,7 @@ openspec/
   specs/              # Accepted specifications
 ```
 
-### Organize Go code under `backend/`
+### Organize Go code under `apps/server/`
 
 Keep one pinned Go module with three executable entry points. Each command loads the configuration it needs and wires the packages it uses.
 
@@ -63,11 +63,11 @@ Keep HTTP handlers, business logic, SQL queries, and domain types together in th
 
 ### Build from the root and share the HTTP contract
 
-Register `apps/*` and `packages/*` in the root Bun workspace, with one manifest per TypeScript workspace. The Vite dashboard in `apps/dashboard` depends on `packages/components` and `packages/api-types`. The Playwright process runs under Bun from `apps/browser-worker`. The Go worker that claims database records has its entry point in `backend/cmd/worker`.
+Register `apps/*` and `packages/*` in the root Bun workspace, with one manifest per TypeScript workspace. The Vite dashboard in `apps/dashboard` depends on `packages/components` and `packages/api-types`. The Playwright process runs under Bun from `apps/browser-worker`. The Go worker that claims database records has its entry point in `apps/server/cmd/worker`.
 
-Pin Bun in the root `package.json` and commit one `bun.lock`. Run build, type check, and test through root Turbo tasks in workspace dependency order. Run Go commands from `backend/` and declare Go sources, module files, migrations, and the API contract as inputs where applicable.
+Pin Bun in the root `package.json` and commit one `bun.lock`. Run build, type check, and test through root Turbo tasks in workspace dependency order. Run Go commands from `apps/server/` and declare Go sources, module files, migrations, and the API contract as inputs where applicable.
 
-The [bootstrap API routes](proposal.md#bootstrap-api-routes) cover health and provider status, sessions, snapshots and collections, preferences, filesystem access, and document previews. Record the agreed methods, paths, requests, responses, and errors in `backend/api/openapi.yaml`. Generate the dashboard’s request, response, and error types into `packages/api-types`. The root checks verify that the generated package matches the contract. Go handlers validate requests at runtime.
+The [bootstrap API routes](proposal.md#bootstrap-api-routes) cover health and provider status, sessions, snapshots and collections, preferences, filesystem access, and document previews. Record the agreed methods, paths, requests, responses, and errors in `apps/server/api/openapi.yaml`. Generate the dashboard’s request, response, and error types into `packages/api-types`. The root checks verify that the generated package matches the contract. Go handlers validate requests at runtime.
 
 ### Build the dashboard with Adobe React Spectrum 2
 
@@ -293,6 +293,6 @@ Store an eligible record's ID, status, and version. Both Go processes call the s
 
 ## Migration Plan
 
-1. Build the three commands from the `backend/` module in the root multi-stage `Dockerfile`. Package the SQL files from `backend/migrations/` with the migration target. Root `compose.yaml` provides PostgreSQL with a health check and persistent volumes per deployment.
+1. Build the three commands from the `apps/server/` module in the root multi-stage `Dockerfile`. Package the SQL files from `apps/server/migrations/` with the migration target. Root `compose.yaml` provides PostgreSQL with a health check and persistent volumes per deployment.
 2. For a fresh start or redeploy, keep both application services stopped until the current startup's migration job succeeds. Require database health for the migration service and successful migration completion for both application services. Keep the migration invocation outside Turbo caching. Record applied SQL versions in PostgreSQL and commit each version with its schema changes.
 3. If a migration fails, keep the API and worker stopped, correct the failed migration or deployment configuration, then rerun against the retained database. For rollback across an incompatible schema change, restore a matching database backup and the corresponding workspace disk snapshots before starting the previous image.

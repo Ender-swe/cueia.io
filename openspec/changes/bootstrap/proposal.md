@@ -10,13 +10,13 @@ Bootstrap establishes the workspace for that journey. Each person gets one priva
 
 ### Repository and startup
 
-Build the Go backend as one module in `backend/`. Pin the Go toolchain and track `backend/go.mod` and `backend/go.sum`. Under `backend/cmd/`, `api` registers the feature handlers with `net/http` and manages the HTTP listener, `worker` claims eligible work, and `migrate` applies pending SQL files from `backend/migrations/` and exits. Group private Go code by feature under `backend/internal/`, with shared packages for configuration, database access, and HTTP middleware.
+Build the Go backend as one module in `apps/server/`. Pin the Go toolchain and track `apps/server/go.mod` and `apps/server/go.sum`. Under `apps/server/cmd/`, `api` registers the feature handlers with `net/http` and manages the HTTP listener, `worker` claims eligible work, and `migrate` applies pending SQL files from `apps/server/migrations/` and exits. Group private Go code by feature under `apps/server/internal/`, with shared packages for configuration, database access, and HTTP middleware.
 
 Register `apps/*` and `packages/*` in the root Bun workspace. Pin Bun in `package.json`, track one `bun.lock`, and install with `bun install --frozen-lockfile`. Coordinate Go and TypeScript builds, checks, and tests through root Turbo tasks.
 
 Build the React dashboard with Vite and React Router v7. Run the Playwright browser worker under Bun. See the [repository layout](design.md#repository-layout) for the planned directories and their responsibilities.
 
-Mount the Adobe React Spectrum 2 `Provider` from `@react-spectrum/s2` at the dashboard root so pages and shared components use the same theme and browser navigation. Describe the HTTP routes, JSON requests and responses, and error formats in `backend/api/openapi.yaml`. The dashboard imports the generated types from `packages/api-types`, and the Go handlers validate requests. Author the application code, artwork, test data, and expected results for Cueia. Declare third-party libraries and service protocols as dependencies.
+Mount the Adobe React Spectrum 2 `Provider` from `@react-spectrum/s2` at the dashboard root so pages and shared components use the same theme and browser navigation. Describe the HTTP routes, JSON requests and responses, and error formats in `apps/server/api/openapi.yaml`. The dashboard imports the generated types from `packages/api-types`, and the Go handlers validate requests. Author the application code, artwork, test data, and expected results for Cueia. Declare third-party libraries and service protocols as dependencies.
 
 Both modes use Clerk with open signup using an email address and password, Google, or GitHub. Sample mode binds to loopback. A single “Open sample workspace” action uses the current Clerk session or starts Clerk sign-in. On first sign-in, each person receives a private copy of the fictional mailbox thread, fillable PDF, calendar event, and default preferences. Later sign-ins and restarts reopen those records with the same IDs. Keep live workspaces separate from sample data.
 

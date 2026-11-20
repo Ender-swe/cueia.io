@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 )
 
 // TestReplaceAcceptanceMachine operates on the internal provider's disposable

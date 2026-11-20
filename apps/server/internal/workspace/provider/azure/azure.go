@@ -16,7 +16,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 	"golang.org/x/crypto/ssh"
 )
 

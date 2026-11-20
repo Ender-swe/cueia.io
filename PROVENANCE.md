@@ -4,7 +4,7 @@ Cueia's Go and TypeScript source, database migrations, North Pier invitation, ev
 
 The PDF was typeset using the built-in Helvetica face with ReportLab 4.4.3. Its two AcroForm text fields were checked by opening, filling, saving and reopening a copy with pypdf 6.1.3. Both tools are development utilities. [ReportLab](https://www.reportlab.com/) · [pypdf](https://pypdf.readthedocs.io/)
 
-The backend uses pgx and the PostgreSQL wire protocol. The build images distribute Go and Alpine Linux, and Compose runs the official PostgreSQL image. The resolved Go dependency versions and checksums are in backend/go.mod and backend/go.sum. [pgx](https://github.com/jackc/pgx) · [Go](https://go.dev/) · [Alpine](https://alpinelinux.org/) · [PostgreSQL](https://www.postgresql.org/)
+The backend uses pgx and the PostgreSQL wire protocol. The build images distribute Go and Alpine Linux, and Compose runs the official PostgreSQL image. The resolved Go dependency versions and checksums are in apps/server/go.mod and apps/server/go.sum. [pgx](https://github.com/jackc/pgx) · [Go](https://go.dev/) · [Alpine](https://alpinelinux.org/) · [PostgreSQL](https://www.postgresql.org/)
 
 The Bun workspace uses Turbo, TypeScript, React, React DOM, Adobe React Spectrum 2, and openapi-typescript. The manifests identify direct dependencies. bun.lock records resolved versions, including transitive packages. [Bun](https://bun.com/) · [Turbo](https://turborepo.com/) · [TypeScript](https://www.typescriptlang.org/) · [React](https://react.dev/) · [Spectrum](https://react-spectrum.adobe.com/) · [openapi-typescript](https://openapi-ts.dev/)
 

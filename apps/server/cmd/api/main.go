@@ -10,13 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/config"
-	"github.com/Ender-swe/cueia.io/backend/internal/document"
-	"github.com/Ender-swe/cueia.io/backend/internal/middleware"
-	"github.com/Ender-swe/cueia.io/backend/internal/session"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider/azure"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider/providertest"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/azure"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

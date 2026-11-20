@@ -30,7 +30,7 @@ bun run type-check
 bun run test
 ```
 
-Turbo builds the TypeScript packages in dependency order. The root tasks also run the Go build, vet, and test commands from `backend/`.
+Turbo builds the TypeScript packages in dependency order. The root tasks also run the Go build, vet, and test commands from `apps/server/`.
 
 ## Starting a deployment
 
@@ -38,7 +38,7 @@ Set `POSTGRES_PASSWORD` to a URL-safe secret and `WORKSPACE_NETWORK` to an exist
 
 Each startup stops the application processes before running a fresh migration job against healthy PostgreSQL. The script starts the API and worker after that job succeeds. Sample and live use separate Compose project names, database volumes, and provider allocation namespaces.
 
-The production workspace provider target is Azure. The internal provider fixture stores each test workspace in its own temporary disk directory. Its tests cover a lost allocation response, a fresh provider instance recovering the binding, rejection of foreign machine and disk references, and replacement retaining the original bytes. Run them from `backend/` with `go test ./internal/workspace/provider/...`.
+The production workspace provider target is Azure. The internal provider fixture stores each test workspace in its own temporary disk directory. Its tests cover a lost allocation response, a fresh provider instance recovering the binding, rejection of foreign machine and disk references, and replacement retaining the original bytes. Run them from `apps/server/` with `go test ./internal/workspace/provider/...`.
 
 ### Azure workspace provider
 
@@ -48,7 +48,7 @@ The image must mount the retained LUN 0 data disk on boot, initialize only a new
 
 The adapter checks the VM owner tag, attached disk and NIC before opening a private connection. Replacements retain the data disk. Local isolation checks use the internal fixture. The live two-VM isolation run is deferred.
 
-Build the guest command from `backend/` with `CGO_ENABLED=0 go build -o cueia-files ./cmd/fileservice` for the image architecture. Install it as a root-owned executable on the image. Configure sshd to force `/usr/local/bin/cueia-files` for `cueiafiles` and disable forwarding, TTY and password login for that account. The service expects the mounted disk at `/srv/cueia`. Grant the service account access to the disk, share its `workspace/` directory with the owner and agent, and keep the sibling `private/` directory accessible only to the service account. Gate SSH service availability on the mount.
+Build the guest command from `apps/server/` with `CGO_ENABLED=0 go build -o cueia-files ./cmd/fileservice` for the image architecture. Install it as a root-owned executable on the image. Configure sshd to force `/usr/local/bin/cueia-files` for `cueiafiles` and disable forwarding, TTY and password login for that account. The service expects the mounted disk at `/srv/cueia`. Grant the service account access to the disk, share its `workspace/` directory with the owner and agent, and keep the sibling `private/` directory accessible only to the service account. Gate SSH service availability on the mount.
 
 ### Dashboard sign-in
 
@@ -58,7 +58,7 @@ With the API running, start the dashboard with `cd apps/dashboard && bun run dev
 
 ### Interactive dashboard acceptance
 
-Build the dashboard with the Clerk test publishable key configured. Install Chromium from `apps/browser-worker` with `bunx playwright install chromium`. From `backend/`, run `go test ./cmd/api -run '^TestBrowserJourney$' -count=1 -v` with `CUEIA_TEST_DATABASE_URL` pointing at disposable PostgreSQL and `CUEIA_BROWSER_CLERK_ISSUER` set to the matching Clerk test issuer.
+Build the dashboard with the Clerk test publishable key configured. Install Chromium from `apps/browser-worker` with `bunx playwright install chromium`. From `apps/server/`, run `go test ./cmd/api -run '^TestBrowserJourney$' -count=1 -v` with `CUEIA_TEST_DATABASE_URL` pointing at disposable PostgreSQL and `CUEIA_BROWSER_CLERK_ISSUER` set to the matching Clerk test issuer.
 
 The test starts an isolated sample workspace, serves the built dashboard on loopback, and opens a fresh Chromium window for sign-in. It writes a nested CSV directly to the internal provider's test disk and checks the Files and Tasks panels, signed PDF preview, keyboard focus, and draft preservation.
 

@@ -49,7 +49,7 @@ try {
   const saved=await snapshot(b)
   expect(saved.preferences.timeFormat).toBe("24h")
   const bytes=Buffer.from(await (await api(b,"/documents/"+attachment.fileId+"/content")).arrayBuffer())
-  const source=await readFile(new URL("../../backend/internal/workspace/sample/north-pier-registration.pdf",import.meta.url))
+  const source=await readFile(new URL("../server/internal/workspace/sample/north-pier-registration.pdf",import.meta.url))
   expect(bytes.equals(source)).toBe(true)
   const filename="workshop-copy.pdf"
   await writeFile(join(root,filename),source,{flag:"wx"})

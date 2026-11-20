@@ -36,7 +36,7 @@ export async function checkDashboard(page: Page, origin: string, root: string) {
   const file = button(expected.attachmentName)
   const preview = page.waitForResponse(r => r.url().startsWith(origin+"/api/previews/") && r.ok())
   await file.click()
-  const pdf = await readFile(new URL("../../backend/internal/workspace/sample/north-pier-registration.pdf",import.meta.url))
+  const pdf = await readFile(new URL("../server/internal/workspace/sample/north-pier-registration.pdf",import.meta.url))
   await preview
   const frame = page.getByTitle(expected.attachmentName, {exact:true})
   await expect(frame).toBeVisible()

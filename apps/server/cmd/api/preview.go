@@ -4,9 +4,9 @@ import (
 	"io/fs"
 	"net/http"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/document"
-	"github.com/Ender-swe/cueia.io/backend/internal/session"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/google/uuid"
 )
 

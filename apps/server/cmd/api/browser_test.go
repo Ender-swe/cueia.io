@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/document"
-	"github.com/Ender-swe/cueia.io/backend/internal/middleware"
-	"github.com/Ender-swe/cueia.io/backend/internal/session"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider/providertest"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 )
 
 // TestBrowserJourney serves the production dashboard and API on one loopback
@@ -22,7 +22,7 @@ func TestBrowserJourney(t *testing.T) {
 		t.Skip("requires an interactive Clerk test login")
 	}
 	store := testWorkspace(t, "sample")
-	dist, err := filepath.Abs("../../../apps/dashboard/dist")
+	dist, err := filepath.Abs("../../../dashboard/dist")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func TestBrowserJourney(t *testing.T) {
 	server.Start()
 	defer server.Close()
 	cmd := exec.CommandContext(t.Context(), "bun", "run", "journey.ts")
-	cmd.Dir = "../../../apps/browser-worker"
+	cmd.Dir = "../../../browser-worker"
 	cmd.Env = append(os.Environ(), "CUEIA_DASHBOARD_ORIGIN="+origin, "CUEIA_TEST_DEPLOYMENT="+store.Deployment, "CUEIA_TEST_DISKS="+store.Provider.(*providertest.Fixture).Directory)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

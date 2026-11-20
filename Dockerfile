@@ -1,8 +1,8 @@
 FROM golang:1.26.2-alpine AS build
 WORKDIR /src
-COPY backend/go.mod backend/go.sum ./
+COPY apps/server/go.mod apps/server/go.sum ./
 RUN go mod download
-COPY backend/ ./
+COPY apps/server/ ./
 RUN CGO_ENABLED=0 go build -trimpath -o /out/ ./cmd/...
 
 FROM alpine:3.22 AS runtime
@@ -20,5 +20,5 @@ ENTRYPOINT ["/app/worker"]
 
 FROM runtime AS migrate
 COPY --from=build /out/migrate /app/migrate
-COPY backend/migrations/ /app/migrations/
+COPY apps/server/migrations/ /app/migrations/
 ENTRYPOINT ["/app/migrate"]

@@ -1,4 +1,4 @@
-module github.com/Ender-swe/cueia.io/backend
+module github.com/Ender-swe/cueia.io/apps/server
 
 go 1.26.2
 

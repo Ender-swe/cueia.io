@@ -23,7 +23,7 @@ services:
   migrate:
     volumes:
       - $fixture_dir/999_failure.sql:/app/migrations/999_failure.sql:ro
-      - ./backend/migrations:/baseline:ro
+      - ./apps/server/migrations:/baseline:ro
   api:
     ports: !override
       - "127.0.0.1::8080"

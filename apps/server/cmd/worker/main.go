@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/claim"
-	"github.com/Ender-swe/cueia.io/backend/internal/database"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/claim"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 )
 
 func run(ctx context.Context) error {

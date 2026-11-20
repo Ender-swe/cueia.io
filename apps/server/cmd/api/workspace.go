@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Ender-swe/cueia.io/backend/internal/session"
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/google/uuid"
 )
 

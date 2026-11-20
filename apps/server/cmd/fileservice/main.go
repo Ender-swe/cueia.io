@@ -2,7 +2,7 @@
 package main
 
 import (
-	"github.com/Ender-swe/cueia.io/backend/internal/workspace/volume"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/volume"
 	"log"
 	"os"
 )
