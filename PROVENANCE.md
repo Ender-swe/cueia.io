@@ -17,3 +17,5 @@ The dashboard uses Vite, React Router and Clerk's React SDK. [Vite](https://vite
 The workspace controls use Adobe Spectrum icons. Tailwind CSS supplies layout utilities, and Motion for React handles panel fades. The uncodixfy project skill was supplied by the project owner.
 
 The Cueia profile image is an original image of a folded terracotta paper loop generated for this dashboard. The rail mark was drawn in CSS. The sample conversation and its illustrative reminder were written for Cueia using the fictional North Pier invitation and event. The dashboard bundles DM Sans from Fontsource under the SIL Open Font License. [DM Sans](https://github.com/googlefonts/dm-fonts)
+
+The sign-in and sign-up pages share an original image of a terracotta paper sculpture on a sand-colored surface. It was generated for Cueia with OpenAI image generation and encoded as WebP in `apps/dashboard/app/assets/paper-orbit.webp`.

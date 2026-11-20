@@ -31,11 +31,11 @@ body { margin: 0; }
   padding: 22px 8px 12px; gap: 8px; border-right: 1px solid var(--color-line);
   background: #191918; overflow: auto; scrollbar-width: none;
 }
-.brand-symbol { width: 33px; height: 33px; display: grid; place-items: center; flex: none; color: var(--color-apricot); }
-.brand-symbol i { grid-area: 1 / 1; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; rotate: -18deg; }
-.brand-symbol i:nth-child(1) { width: 32px; height: 32px; }
-.brand-symbol i:nth-child(2) { width: 23px; height: 23px; }
-.brand-symbol i:nth-child(3) { width: 14px; height: 14px; }
+.brand-symbol { width: 33px; height: 33px; display: grid; place-items: center; flex: none; font-size: 32px; color: var(--color-apricot); }
+.brand-symbol i { grid-area: 1 / 1; border: .0625em solid currentColor; border-right-color: transparent; border-radius: 50%; rotate: -18deg; }
+.brand-symbol i:nth-child(1) { width: 1em; height: 1em; }
+.brand-symbol i:nth-child(2) { width: .71875em; height: .71875em; }
+.brand-symbol i:nth-child(3) { width: .4375em; height: .4375em; }
 .nav-destinations { display: grid; gap: 6px; margin-block: auto; width: 100%; }
 .workspace .nav-control {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;

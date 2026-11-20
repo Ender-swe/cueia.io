@@ -25,9 +25,13 @@ interface NavigationProps {
   onMenu: () => void
 }
 
+export function CueiaMark() {
+  return <span className="brand-symbol" aria-hidden="true"><i /><i /><i /></span>
+}
+
 export function WorkspaceNavigation({ expanded, onSelect, menuOpen, onMenu }: NavigationProps) {
   return <nav className="workspace-nav" aria-label="Workspace">
-    <div className="brand-symbol" role="img" aria-label="Cueia"><i /><i /><i /></div>
+    <div role="img" aria-label="Cueia"><CueiaMark /></div>
     <div className="nav-destinations">
       {destinations.map(({ view, label, Icon }) =>
         <Button key={view} id={"nav-" + view} className="nav-control"
