@@ -16,6 +16,7 @@ import (
 	"github.com/Ender-swe/cueia.io/backend/internal/session"
 	"github.com/Ender-swe/cueia.io/backend/internal/workspace"
 	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider/azure"
+	"github.com/Ender-swe/cueia.io/backend/internal/workspace/provider/providertest"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -29,11 +30,17 @@ func run(ctx context.Context) error {
 		return errors.New("invalid database configuration")
 	}
 	defer db.Close()
-	machines, err := azure.FromEnvironment()
-	if err != nil {
-		return errors.New("invalid Azure workspace provider configuration")
+	store := &workspace.Service{DB: db, Deployment: os.Getenv("CUEIA_DEPLOYMENT_ID"), Mode: settings.Mode}
+	if dir := os.Getenv("CUEIA_TEST_VOLUME_ROOT"); dir != "" && settings.Mode == "sample" {
+		store.Provider = &providertest.Fixture{Directory: dir}
+		store.ProviderName, store.Region = "internal", "local"
+	} else {
+		machines, err := azure.FromEnvironment()
+		if err != nil {
+			return errors.New("invalid Azure workspace provider configuration")
+		}
+		store.Provider, store.ProviderName, store.Region = machines, "azure", os.Getenv("AZURE_LOCATION")
 	}
-	store := &workspace.Service{DB: db, Provider: machines, Deployment: os.Getenv("CUEIA_DEPLOYMENT_ID"), ProviderName: "azure", Region: os.Getenv("AZURE_LOCATION"), Mode: settings.Mode}
 	sessions := session.Service{DB: db, Verify: session.Clerk(ctx, settings.ClerkIssuer, settings.AuthorizedParty), Provision: store.Provision}
 	mux := routes(sessions.Authenticate, nil)
 	workspaceRoutes(mux, sessions, store)
