@@ -1,3 +1,13 @@
+FROM oven/bun:1.3.10 AS dashboard
+WORKDIR /workspace
+COPY package.json bun.lock tsconfig.base.json ./
+COPY apps/dashboard/package.json apps/dashboard/package.json
+COPY apps/browser-worker/package.json apps/browser-worker/package.json
+COPY packages/ packages/
+RUN bun install --frozen-lockfile --linker hoisted
+WORKDIR /workspace/apps/dashboard
+CMD ["bun", "--bun", "run", "dev", "--host", "0.0.0.0", "--strictPort"]
+
 FROM golang:1.26.2-alpine AS build
 WORKDIR /src
 COPY apps/server/go.mod apps/server/go.sum ./

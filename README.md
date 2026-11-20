@@ -34,21 +34,31 @@ Turbo builds the TypeScript packages in dependency order. The root tasks also ru
 
 ## Start the local app
 
-With Bun 1.3.10 and Docker Compose installed, set `VITE_CLERK_PUBLISHABLE_KEY` in `apps/dashboard/.env.local` to your Clerk test publishable key. From the repository root, install dependencies once with `bun install --frozen-lockfile`, then run
+On a new checkout, install Bun 1.3.10 and Docker Compose, then run these commands from the repository root.
+
+```sh
+bun install --frozen-lockfile
+cp .env.example .env
+mkdir -p -m 700 "$HOME/.local/share/cueia/sample-disks"
+```
+
+Set `VITE_CLERK_PUBLISHABLE_KEY` and `CLERK_ISSUER` in `.env` for your Clerk test instance. Set `CUEIA_TEST_UID` and `CUEIA_TEST_GID` to the output of `id -u` and `id -g` if they differ from the defaults. If you already have a sample database, use its existing `POSTGRES_PASSWORD`.
 
 ```sh
 bun start
 ```
 
-The command starts PostgreSQL, applies migrations, starts the API and worker, and checks `http://127.0.0.1:8080/api/health`. It creates the local Docker network and keeps sample files in `~/.local/share/cueia/sample-disks`. Subsequent runs reuse the files and the `cueia-sample` database volume. If you previously configured a different password for that volume, export the same `POSTGRES_PASSWORD` before starting.
-
-Once the API is healthy, Vite starts the dashboard and opens `http://127.0.0.1:5173/workspace` in your default browser. The command prints the dashboard log path and returns your terminal prompt. To stop the dashboard and local Docker services, run `bun run stop` from the repository root. Your database and sample files persist. To start only the server, run `./scripts/start`.
+Open `http://127.0.0.1:5173/workspace`. Compose runs Vite alongside the API, worker, and PostgreSQL. Edits in `apps/dashboard` and the shared UI packages update the open dashboard automatically. Use `docker compose logs -f dashboard` to see Vite’s output. Run `bun run stop` to stop the whole app. The database volume and sample files persist.
 
 ## Starting a deployment
 
-Set `POSTGRES_PASSWORD` to a URL-safe secret and `WORKSPACE_NETWORK` to an existing Docker network with private connectivity to that deployment's workspace VMs. Configure `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTY`, and `CPK_INTELLIGENCE_API_KEY` for the API. Load the environment for the desired mode and run `scripts/start sample` or `scripts/start live`. Set `CUEIA_PORT` to distinct ports when running both simultaneously. Both publish the API on loopback.
+In a separate deployment env file, set `CUEIA_MODE` to `sample` or `live`. Set `POSTGRES_PASSWORD` to a URL-safe secret and `WORKSPACE_NETWORK` to an existing Docker network with private connectivity to that deployment's workspace VMs. Configure `CLERK_ISSUER`, `CLERK_AUTHORIZED_PARTY`, and `CPK_INTELLIGENCE_API_KEY` for the API.
 
-Each startup stops the application processes before running a fresh migration job against healthy PostgreSQL. The script starts the API and worker after that job succeeds. Sample and live use separate Compose project names, database volumes, and provider allocation namespaces.
+```sh
+docker compose --env-file /path/to/deployment.env -f compose.yaml up -d --build --force-recreate
+```
+
+Compose waits for healthy PostgreSQL and a successful migration before starting the API and worker. Each mode has its own Compose project and database volume. Set distinct `CUEIA_PORT` values when running both modes at once.
 
 The production workspace provider target is Azure. The internal provider fixture stores each test workspace in its own temporary disk directory. Its tests cover a lost allocation response, a fresh provider instance recovering the binding, rejection of foreign machine and disk references, and replacement retaining the original bytes. Run them from `apps/server/` with `go test ./internal/workspace/provider/...`.
 
@@ -66,9 +76,7 @@ Build the guest command from `apps/server/` with `CGO_ENABLED=0 go build -o cuei
 
 The sample dashboard at `/` and the private workspace at `/workspace` require a Clerk session. Signed-out visitors are taken to `/sign-in` and can switch to `/sign-up` to create an account. After authentication, Clerk returns them to the workspace they opened. Direct visits to either form lead to the sample dashboard after authentication. Configure static hosting to serve the dashboard entry point for both auth routes and their nested paths so verification, password recovery, and OAuth callbacks work on refresh.
 
-Set `VITE_CLERK_PUBLISHABLE_KEY` in `apps/dashboard/.env.local` to the publishable key for the Clerk instance used by that deployment. Configure the API's `CLERK_ISSUER` for the same instance and `CLERK_AUTHORIZED_PARTY` for the dashboard origin. For local sample development, use `http://127.0.0.1:5173` as the dashboard origin. Set signup to public, enable email addresses as a sign-in identifier, and enable password authentication. Enable Google and GitHub as social sign-in options. Use the live deployment's own instance settings and dashboard origin when deploying live.
-
-With the API running, start the dashboard with `cd apps/dashboard && bun run dev --port 5173 --strictPort` and open `http://127.0.0.1:5173`. Vite proxies API requests to loopback port 8080. Set `CUEIA_API_ORIGIN` to point the development or preview server at a different API. Keep API and provider credentials in the server environment. The dashboard build needs only the publishable key.
+Supply the publishable key for the deployment’s Clerk instance when building the dashboard. Configure the API's `CLERK_ISSUER` for the same instance and `CLERK_AUTHORIZED_PARTY` for the dashboard origin. For local sample development, use `http://127.0.0.1:5173` as the dashboard origin. Set signup to public, enable email addresses as a sign-in identifier, and enable password authentication. Enable Google and GitHub as social sign-in options. Use the live deployment's own instance settings and dashboard origin when deploying live.
 
 ### Interactive dashboard acceptance
 

@@ -1,11 +1,9 @@
 node_modules/
 dist/
 .turbo/
+/.env
 /apps/dashboard/.env.local
 /apps/browser-worker/.env.local
 package.json
-scripts/start
-scripts/stop
-scripts/start-dashboard
 
 !/packages/ui/package.json

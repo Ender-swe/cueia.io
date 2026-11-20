@@ -61,7 +61,10 @@ function workspaceDestination(value: string | null) {
   if (!value) return null;
   try {
     const url = new URL(value, window.location.origin);
-    if (url.origin === window.location.origin && ["/", "/workspace", "/workspace/"].includes(url.pathname)) {
+    if (
+      url.origin === window.location.origin &&
+      ["/", "/workspace", "/workspace/"].includes(url.pathname)
+    ) {
       return url;
     }
   } catch {
@@ -87,14 +90,19 @@ function PaperOrbit() {
       <pre
         aria-hidden="true"
         style={style}
-        onAnimationIteration={event => {
-          if (event.animationName === "paper-orbit-turn") setTurnAngle(randomTurnAngle());
+        onAnimationIteration={(event) => {
+          if (event.animationName === "paper-orbit-turn")
+            setTurnAngle(randomTurnAngle());
         }}
-      >{paperOrbit.trimEnd()}</pre>
+      >
+        {paperOrbit.trimEnd()}
+      </pre>
       <Button
         className="auth-art-control"
-        aria-label={paused ? "Play artwork animation" : "Pause artwork animation"}
-        onPress={() => setPaused(value => !value)}
+        aria-label={
+          paused ? "Play artwork animation" : "Pause artwork animation"
+        }
+        onPress={() => setPaused((value) => !value)}
       >
         {paused ? <Play /> : <Pause />}
       </Button>
@@ -108,11 +116,15 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
   const atStart = useMatch("/" + mode);
   const [params] = useSearchParams();
   const destination = workspaceDestination(params.get("redirect_url"));
+  const returnTo = destination
+    ? destination.pathname + destination.search + destination.hash
+    : "/";
   if (isSignedIn && atStart) {
-    const to = destination ? destination.pathname + destination.search + destination.hash : "/";
-    return <Navigate replace to={to} />;
+    return <Navigate replace to={returnTo} />;
   }
-  const returnQuery = destination ? "?" + new URLSearchParams({ redirect_url: destination.href }) : "";
+  const returnQuery = destination
+    ? "?" + new URLSearchParams({ redirect_url: destination.href })
+    : "";
   const fallback = (
     <p className="auth-status" role="status">
       Loading {signingIn ? "sign-in" : "sign-up"}…
@@ -125,7 +137,10 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
         {signingIn ? "Sign in to Cueia" : "Create your Cueia account"}
       </title>
       <header className="auth-brand">
-        <span className="auth-wordmark"><CueiaMark />Cueia</span>
+        <span className="auth-wordmark">
+          <CueiaMark />
+          Cueia
+        </span>
       </header>
       <section
         className="auth-form"
@@ -135,6 +150,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
           <SignIn
             path="/sign-in"
             signUpUrl={"/sign-up" + returnQuery}
+            forceRedirectUrl={returnTo}
             routing="path"
             appearance={appearance}
             fallback={fallback}
@@ -143,6 +159,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
           <SignUp
             path="/sign-up"
             signInUrl={"/sign-in" + returnQuery}
+            forceRedirectUrl={returnTo}
             routing="path"
             appearance={appearance}
             fallback={fallback}

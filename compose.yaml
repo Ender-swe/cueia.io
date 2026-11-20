@@ -54,6 +54,6 @@ services:
 networks:
   workspace:
     external: true
-    name: ${WORKSPACE_NETWORK:?set the Docker network with private provider connectivity}
+    name: ${WORKSPACE_NETWORK:-${COMPOSE_PROJECT_NAME}_workspace}
 volumes:
   database:
