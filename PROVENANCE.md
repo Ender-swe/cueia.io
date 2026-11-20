@@ -11,3 +11,5 @@ The Bun workspace uses Turbo, TypeScript, React, React DOM, Adobe React Spectrum
 The API contract uses OpenAPI. The planned identity and infrastructure integrations use Clerk session JWTs and the Azure Resource Manager API. [OpenAPI](https://spec.openapis.org/) · [Clerk](https://clerk.com/docs) · [Azure Resource Manager](https://learn.microsoft.com/azure/azure-resource-manager/)
 
 The Azure adapter uses Microsoft's Go SDK, Go's SSH implementation for private file access. [Azure SDK](https://github.com/Azure/azure-sdk-for-go) · [Go SSH](https://pkg.go.dev/golang.org/x/crypto/ssh)
+
+The dashboard uses Vite, React Router and Clerk's React SDK. [Vite](https://vite.dev/) · [React Router](https://reactrouter.com/) · [Clerk React SDK](https://github.com/clerk/javascript)

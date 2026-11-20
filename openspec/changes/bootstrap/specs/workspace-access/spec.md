@@ -27,12 +27,12 @@ Sample and live APIs SHALL validate required Clerk settings and the server-side 
 
 ### Requirement: Sign-in opens the owner's workspace
 
-Both modes SHALL permit open signup with Google or GitHub through Clerk as the only identity providers. One “Open sample workspace” action SHALL use the current Clerk session or start sign-in and continue into that person's sample workspace.
+Both modes SHALL permit open signup through Clerk using an email address and password, Google, or GitHub. One “Open sample workspace” action SHALL use the current Clerk session or start sign-in and continue into that person's sample workspace.
 
 #### Scenario: First visit and return visit
 
 1. **WHEN** a signed-out visitor chooses “Open sample workspace”
-2. **THEN** they can sign up through Google or GitHub and open their own workspace without a second launch action.
+2. **THEN** they can sign up with an email address and password, Google, or GitHub and open their own workspace without a second launch action.
 3. **WHEN** the visitor chooses the action again with a valid Clerk session
 4. **THEN** they reopen the same workspace without another sign-in prompt.
 

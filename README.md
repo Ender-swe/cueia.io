@@ -49,3 +49,9 @@ The image must mount the retained LUN 0 data disk on boot, initialize only a new
 The adapter checks the VM owner tag, attached disk and NIC before opening a private connection. Replacements retain the data disk. Local isolation checks use the internal fixture. The live two-VM isolation run is deferred.
 
 Build the guest command from `backend/` with `CGO_ENABLED=0 go build -o cueia-files ./cmd/fileservice` for the image architecture. Install it as a root-owned executable on the image. Configure sshd to force `/usr/local/bin/cueia-files` for `cueiafiles` and disable forwarding, TTY and password login for that account. The service expects the mounted disk at `/srv/cueia`. Grant the service account access to the disk, share its `workspace/` directory with the owner and agent, and keep the sibling `private/` directory accessible only to the service account. Gate SSH service availability on the mount.
+
+### Dashboard sign-in
+
+Set `VITE_CLERK_PUBLISHABLE_KEY` in `apps/dashboard/.env.local` to the publishable key for the Clerk instance used by that deployment. Configure the API's `CLERK_ISSUER` for the same instance and `CLERK_AUTHORIZED_PARTY` for the dashboard origin. For local sample development, use `http://127.0.0.1:5173` as the dashboard origin. Set signup to public, enable email addresses as a sign-in identifier, and enable password authentication. Enable Google and GitHub as social sign-in options. Use the live deployment's own instance settings and dashboard origin when deploying live.
+
+With the API running, start the dashboard with `cd apps/dashboard && bun run dev --port 5173 --strictPort` and open `http://127.0.0.1:5173`. Vite proxies API requests to loopback port 8080. Set `CUEIA_API_ORIGIN` to point the development or preview server at a different API. Keep API and provider credentials in the server environment. The dashboard build needs only the publishable key.

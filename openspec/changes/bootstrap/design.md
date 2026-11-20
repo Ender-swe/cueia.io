@@ -75,7 +75,7 @@ Mount one `Provider` from `@react-spectrum/s2` inside the dashboard’s React Ro
 
 Keep the sign-in and workspace pages and their page-specific controls under `apps/dashboard/app/pages/`. Put reusable Cueia UI in `packages/components`. For example, the workspace page requests a signed URL for the selected attachment and passes it to the shared Spectrum preview dialog. This keeps the session and API call in the dashboard and lets the dialog render a PDF wherever a page supplies an authorized URL.
 
-The React Router v7 sample entry route starts Clerk sign-in when necessary and returns to the same route to finish the exchange and fetch the snapshot. Configure open signup with only Google and GitHub in Clerk for each mode. Only the publishable Clerk configuration enters the web build. Keep the Cueia bearer in client memory and exchange again using the existing Clerk session on a return visit. Explicit sign-out revokes the presenting Cueia bearer before clearing client state.
+The React Router v7 sample entry route starts Clerk sign-in when necessary and returns to the same route to finish the exchange and fetch the snapshot. Configure open signup in Clerk for each mode with email and password authentication and the Google and GitHub social providers. Only the publishable Clerk configuration enters the web build. Keep the Cueia bearer in client memory and exchange again using the existing Clerk session on a return visit. Explicit sign-out revokes the presenting Cueia bearer before clearing client state.
 
 ### Chat, Files, and Tasks
 

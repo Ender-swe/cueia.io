@@ -47,3 +47,10 @@ func (l *Limiter) Allow(peer string) bool {
 	l.peers[peer] = v
 	return true
 }
+
+func (l *Limiter) exhausted(peer string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	w := l.peers[peer]
+	return l.Now().Before(w.until) && w.count >= l.Limit
+}

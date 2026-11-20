@@ -4,12 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noEmit && vite build",
     "type-check": "tsc --noEmit",
-    "test": "bun test --pass-with-no-tests"
+    "test": "bun test --pass-with-no-tests",
+    "dev": "vite",
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/react": "^6.19.2",
+    "@cueia/api-types": "workspace:*",
     "@cueia/components": "workspace:*",
-    "@cueia/api-types": "workspace:*"
+    "@react-spectrum/s2": "1.8.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "7",
+    "vite": "7"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
   }
 }
