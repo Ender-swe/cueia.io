@@ -35,4 +35,4 @@ Stopping or receiving a run error pauses the queue, including errors delivered a
 
 ## Impact
 
-The runtime supplies streamed turns. Native and web clients own volatile drafts and queues. The history service owns saved threads, and durable task and file services own the objects linked from messages.
+The runtime supplies streamed turns. The web client owns volatile drafts and queues. The history service owns saved threads, and durable task and file services own the objects linked from messages.

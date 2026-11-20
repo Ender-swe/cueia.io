@@ -21,13 +21,13 @@ On creation, assign an owner-scoped task ID and save the request, task type, sou
 
 ### Worker behavior
 
-Provide in-process and standalone Bun entry points using the same scheduler. Select eligible work by status and due time. Atomically claim the task with a unique lease token and expiry, and renew during long work. A worker losing the lease must discard stale progress. Check ownership of the lease at each durable write and before starting an effect. For an already-dispatched external write, reconcile the stored review and receipt. Cancellation cannot retract an effect already accepted by a provider.
+Provide in-process and standalone Go entry points using the same scheduler and PostgreSQL claim logic through `pgx`. Select eligible work by status and due time. Atomically claim the task with a unique lease token and expiry, and renew during long work. A worker losing the lease must discard stale progress. Check ownership of the lease at each durable write and before starting an effect. For an already-dispatched external write, reconcile the stored review and receipt. Cancellation cannot retract an effect already accepted by a provider.
 
 Store reusable file, review, and result IDs under a stable operation identity. Recover an expired attempt from its last durable checkpoint and reconcile effects recorded after that checkpoint. Limit concurrent jobs while allowing unrelated jobs to progress during slow work or review. A paused task becomes eligible only on an explicit resume. A future scheduled task stays idle until due.
 
 ### Acceptance with a controlled clock and worker barriers
 
-1. Release two separate Bun workers against one eligible task in Docker PostgreSQL. Record handler entry and durable outcomes. Expect one handler and one outcome. In another run, cancel after claim and before effect dispatch. Release the stale worker and expect zero effects and a cancelled task.
+1. Release two separate Go workers against one eligible task in Docker PostgreSQL. Record handler entry and durable outcomes. Expect one handler and one outcome. In another run, cancel after claim and before effect dispatch. Release the stale worker and expect zero effects and a cancelled task.
 2. Save a file and its ID, terminate the worker, reopen the database, advance beyond the lease expiry, and start another worker. It must reopen the file, finish the original task, and retain the interrupted attempt in history. A late update carrying the old lease must have no effect.
 3. Leave one task waiting for review and queue another. The second task finishes while the first retains its review. Deliver the same decision twice and verify one transition and one recorded outcome. Restart while paused and verify that only an explicit resume makes the task eligible.
 

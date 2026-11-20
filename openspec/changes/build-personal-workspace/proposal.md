@@ -38,4 +38,4 @@ Import UTF-8 CSV up to 500,000 bytes inclusive. Accept an initial byte-order mar
 
 ## Impact
 
-Depends on workspace storage, mail evidence, and durable task outcomes. Supplies the notification inbox to watches and saved artifact details to native and web clients. Finance uses user-supplied files. Bank feeds and device push are future extensions.
+Depends on workspace storage, mail evidence, and durable task outcomes. Supplies the notification inbox to watches and saved artifact details to the web client. Finance uses user-supplied files. Bank feeds and device push are future extensions.

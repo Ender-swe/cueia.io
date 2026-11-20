@@ -16,13 +16,13 @@ Persist a receipt containing owner, provider, computer ID, command, start/end ti
 
 ### Optional hosted desktop
 
-For E2B, require server-side credentials and a stable deployment ID. Associate sandboxes with both deployment and owner before reuse. Display that the desktop has network access. Preserve workspace files across pause/resume. Start the display before issuing access, embed its live stream on web, and hand off to the system browser on native. Allow pointer, keyboard, scroll, and screenshot actions only against a running desktop. Use screenshot pixel coordinates and return a fresh image after each action. Stop closes stream access and ends running programs.
+For E2B, require server-side credentials and a stable deployment ID. Associate sandboxes with both deployment and owner before reuse. Display that the desktop has network access. Preserve workspace files across pause/resume. Start the display before issuing access and embed its live stream in the web client. Allow pointer, keyboard, scroll, and screenshot actions only against a running desktop. Use screenshot pixel coordinates and return a fresh image after each action. Stop closes stream access and ends running programs.
 
 ### Acceptance
 
 1. Run a real disposable Docker computer. Create a folder and text file, run a command that reads it, and inspect the receipt. Transfer a Cueia fixture PDF in both directions and compare byte counts and digests. Stop and restart, then reopen both files. Attempt to read outside the workspace and expect denial.
 2. Run a command past the deadline and another beyond the output cap. Check timeout and truncation independently. Interrupt a running command, restart the service, and verify the original receipt shows interruption. Open file A then B and delay A’s response until after editing B. B must retain its text.
-3. With a hosted transport double, exercise paused, running, and stopped states and rejection of a sandbox belonging to another deployment. For a credentialed run, open a fixture document and compare screenshots before and after. Verify web/native handoff and that stopping closes access. Record the actual provider and platform exercised.
+3. With a hosted transport double, exercise paused, running, and stopped states and rejection of a sandbox belonging to another deployment. For a credentialed run, open a fixture document and compare screenshots before and after. Verify the stream opens in the web client and stopping the desktop closes access. Record the actual provider and browser exercised.
 
 ## Capabilities
 
