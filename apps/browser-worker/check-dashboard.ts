@@ -181,7 +181,7 @@ export async function checkDashboard(page: Page, origin: string, root: string) {
   await button("Close Tasks").click();
   await expect(button("Tasks")).toBeFocused();
   await expect(tasks).toBeHidden();
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 700, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await button("Files").click();
   await expect(search).toHaveValue(expected.attachmentName);
@@ -199,6 +199,16 @@ export async function checkDashboard(page: Page, origin: string, root: string) {
   await expect(draft).toBeInViewport({ ratio: 1 });
   await expect(draft).toHaveValue("Bring the field notes.");
   await page.setViewportSize({ width: 390, height: 460 });
+  await expect(conversation).toBeHidden();
+  await expect(tasks).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole("separator")).toHaveCount(0);
+  await button("Files").click();
+  await expect(files).toBeInViewport({ ratio: 1 });
+  await expect(tasks).toBeHidden();
+  await expect(conversation).toBeHidden();
+  await button("Chat").click();
+  await button("Main chat").click();
+  await expect(draft).toHaveValue("Bring the field notes.");
   await draft.fill("Ready for Saturday.");
   await expect(draft).toBeInViewport({ ratio: 1 });
   expect(

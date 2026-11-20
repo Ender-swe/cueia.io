@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "docker compose up -d --build --force-recreate",
+    "start": "docker compose up -d --build --force-recreate && address=$(docker compose port dashboard 5173) && echo \"Open Cueia in your browser: http://$address/workspace\"",
     "stop": "docker compose down",
     "pretty": "prettier --ignore-path .prettierignore --write . && find apps/server -type d -name vendor -prune -o -type f -name '*.go' -exec gofmt -w {} +",
     "build": "turbo run build build:go",

@@ -41,7 +41,7 @@ export function TaskDetails({
           {sampleMode ? "Connected" : "Agent disconnected"}
         </div>
       </div>
-      <section className="my-0 mx-4.75 py-5.5 px-0.5 [border-top:1px_solid_var(--color-line)] [&_h3]:flex [&_h3]:items-center [&_h3]:gap-2 [&_h3]:mb-4 [&_h3]:text-[14px] [&_h3]:font-semibold compact:mx-[9px] compact:py-3.5 compact:[&_h3]:block compact:[&_h3]:text-[13px]">
+      <section className="my-0 mx-4.75 py-5.5 px-0.5 [border-top:1px_solid_var(--color-line)] [&_h3]:flex [&_h3]:items-center [&_h3]:gap-2 [&_h3]:mb-4 [&_h3]:text-[14px] [&_h3]:font-semibold compact:mx-[9px] compact:py-3.5 @max-[220px]/tasks:[&_h3]:block compact:[&_h3]:text-[13px]">
         <h3>
           Scheduled tasks
           {sampleMode && (
@@ -53,7 +53,7 @@ export function TaskDetails({
         </h3>
         {sampleMode ? (
           <>
-            <div className="flex items-start gap-2.75 [&>svg]:w-4.25 [&>svg]:h-4.25 [&>svg]:mt-0.75 [&>svg]:text-apricot [&_p_span]:mx-0.5 [&_small]:block [&_small]:mt-1.5 [&_small]:text-caption [&_small]:text-muted compact:grid compact:gap-1.5">
+            <div className="flex items-start gap-2.75 [&>svg]:w-4.25 [&>svg]:h-4.25 [&>svg]:mt-0.75 [&>svg]:text-apricot [&_p_span]:mx-0.5 [&_small]:block [&_small]:mt-1.5 [&_small]:text-caption [&_small]:text-muted @max-[220px]/tasks:grid @max-[220px]/tasks:gap-1.5">
               <Bell />
               <div>
                 <strong className="block text-interface font-label compact:text-[14px]">
@@ -65,7 +65,7 @@ export function TaskDetails({
               </div>
             </div>
             <Button
-              className="inline-flex justify-start items-center gap-1 m-[9px_0_0_22px] p-1.25 border-0 text-apricot bg-transparent text-[12px] font-medium [&_svg]:w-3 [&_svg]:h-3 hover:underline compact:whitespace-normal compact:ml-0 compact:text-left"
+              className="inline-flex justify-start items-center gap-1 m-[9px_0_0_22px] p-1.25 border-0 text-apricot bg-transparent text-[12px] font-medium [&_svg]:w-3 [&_svg]:h-3 hover:underline compact:whitespace-normal @max-[220px]/tasks:ml-0 compact:text-left"
               onPress={() => setAllTasks(true)}
             >
               See all scheduled tasks
@@ -76,10 +76,10 @@ export function TaskDetails({
           <p className="text-[13px] text-muted">No scheduled tasks.</p>
         )}
       </section>
-      <section className="my-0 mx-4.75 py-5.5 px-0.5 [border-top:1px_solid_var(--color-line)] [&_h3]:flex [&_h3]:items-center [&_h3]:gap-2 [&_h3]:mb-4 [&_h3]:text-[14px] [&_h3]:font-semibold compact:mx-[9px] compact:py-3.5 compact:[&_h3]:block compact:[&_h3]:text-[13px]">
+      <section className="my-0 mx-4.75 py-5.5 px-0.5 [border-top:1px_solid_var(--color-line)] [&_h3]:flex [&_h3]:items-center [&_h3]:gap-2 [&_h3]:mb-4 [&_h3]:text-[14px] [&_h3]:font-semibold compact:mx-[9px] compact:py-3.5 @max-[220px]/tasks:[&_h3]:block compact:[&_h3]:text-[13px]">
         <h3>{sampleMode ? "Today" : "Today's activity"}</h3>
         {sampleMode ? (
-          <div className="flex items-start gap-2.75 [&>svg]:w-4.25 [&>svg]:h-4.25 [&>svg]:mt-0.75 [&>svg]:text-muted [&_p_span]:mx-0.5 compact:grid compact:gap-1.5">
+          <div className="flex items-start gap-2.75 [&>svg]:w-4.25 [&>svg]:h-4.25 [&>svg]:mt-0.75 [&>svg]:text-muted [&_p_span]:mx-0.5 @max-[220px]/tasks:grid @max-[220px]/tasks:gap-1.5">
             <Check />
             <div>
               <strong className="block text-interface font-label compact:text-[14px]">

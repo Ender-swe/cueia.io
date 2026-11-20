@@ -5,6 +5,7 @@
 @source "../../../packages/components/src";
 @source "../../../packages/ui";
 
+@custom-variant phone (@media (max-width: 600px));
 @custom-variant compact (@media (max-width: 760px));
 @custom-variant short-screen (@media (max-height: 500px));
 @custom-variant compact-auth (@media (max-width: 760px) and (max-height: 740px));

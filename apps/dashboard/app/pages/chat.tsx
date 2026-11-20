@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link } from "react-router";
 import Add from "@react-spectrum/s2/icons/Add";
 import ChatIcon from "@react-spectrum/s2/icons/Chat";
@@ -111,8 +112,10 @@ export function Chat({
   }
 
   function openChat(id: string) {
-    setActive(id);
-    if (matchMedia(compactWorkspace).matches) setLeft(null);
+    flushSync(() => {
+      setActive(id);
+      if (matchMedia(compactWorkspace).matches) setLeft(null);
+    });
     feed.current?.focus();
   }
 
@@ -214,7 +217,9 @@ export function Chat({
         }}
       />
       <div data-workspace-body className="flex min-h-0 min-w-0 flex-1">
-        <div className="flex min-h-0 min-w-0 flex-1 compact:flex-col">
+        <div
+          className={`flex min-h-0 min-w-0 flex-1 compact:flex-col ${tasksOpen ? "phone:hidden" : ""}`}
+        >
           <ResizableSidebar
             side="context"
             panel={left}
@@ -249,7 +254,7 @@ export function Chat({
             ))}
           </ResizableSidebar>
           <section
-            className="flex min-h-0 min-w-0 flex-1 flex-col @container/conversation"
+            className={`flex min-h-0 min-w-0 flex-1 flex-col @container/conversation ${left ? "phone:hidden" : ""}`}
             aria-label={title}
           >
             <header className="flex items-center flex-none gap-2.5 h-15.5 px-7 [border-bottom:1px_solid_var(--color-line)] [&_h1]:text-[17px] [&_h1]:font-semibold [&_h1]:tracking-tight [&_svg]:text-muted [&_svg]:w-4.25 [&_svg]:h-4.25 compact:h-12.5 compact:px-4">
@@ -335,7 +340,7 @@ export function Chat({
           <aside
             id="tasks-panel"
             hidden={!tasksOpen}
-            className="[[hidden]]:hidden h-full overflow-y-auto min-w-0 scrollbar-thin [&_label]:grid [&_label]:gap-2 [&_label]:text-[14px] [&_label_>_input]:w-full [&_label_>_input]:bg-raised [&_label_>_input]:p-2 [&_label_>_input]:[border:1px_solid_#53514b] [&_label_>_input]:rounded-md [border-left:1px_solid_var(--color-line)] bg-panel compact:wrap-anywhere"
+            className="[[hidden]]:hidden h-full overflow-y-auto min-w-0 scrollbar-thin [&_label]:grid [&_label]:gap-2 [&_label]:text-[14px] [&_label_>_input]:w-full [&_label_>_input]:bg-raised [&_label_>_input]:p-2 [&_label_>_input]:[border:1px_solid_#53514b] [&_label_>_input]:rounded-md [border-left:1px_solid_var(--color-line)] bg-panel @container/tasks compact:wrap-anywhere"
             aria-label="Tasks"
           >
             <TaskDetails
