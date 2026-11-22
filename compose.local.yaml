@@ -1,0 +1,26 @@
+services:
+  dashboard:
+    build:
+      context: .
+      target: dashboard
+    depends_on: [api]
+    environment:
+      VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-}
+      CUEIA_API_ORIGIN: http://api:8080
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "127.0.0.1:${CUEIA_DASHBOARD_PORT:-5173}:5173"
+    volumes:
+      - ./apps/dashboard:/workspace/apps/dashboard:ro
+      - ./apps/server/internal/workspace/sample:/workspace/apps/server/internal/workspace/sample:ro
+      - ./packages:/workspace/packages:ro
+    # Use the image's hoisted dependencies and give Vite a writable cache.
+    tmpfs:
+      - /workspace/apps/dashboard/node_modules
+      - /workspace/packages/api-types/node_modules
+      - /workspace/packages/components/node_modules
+      - /workspace/packages/ui/node_modules
+
+networks:
+  workspace:
+    external: false

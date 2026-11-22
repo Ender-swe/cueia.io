@@ -1,0 +1,12 @@
+{
+  "subject": "Your place at the North Pier mapmaking workshop",
+  "senderAddress": "mara@northpier.example",
+  "sentAt": "2026-10-12T09:00:00-05:00",
+  "bodyText": "Meet us at the long table in Pier Hall on Saturday at 10. We'll draw a field map of the river stairs. Please bring a pencil and fill in the attached registration form. — Mara",
+  "title": "North Pier mapmaking workshop",
+  "startsAt": "2026-10-17T10:00:00-05:00",
+  "endsAt": "2026-10-17T11:30:00-05:00",
+  "timeZone": "America/Chicago",
+  "filename": "north-pier-registration.pdf",
+  "preferences": { "timeFormat": "12h" }
+}

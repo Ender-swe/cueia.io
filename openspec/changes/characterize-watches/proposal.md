@@ -10,15 +10,15 @@ An owner can watch a public page and receive an in-app alert when a condition be
 
 Create an owner-bound watch with target URL, condition and value, interval, linked task ID, lifecycle state, and next due time. Use the browser page reader for both scheduled and manual checks. Save an observation with stable ID, actual URL, title, observed time, bounded text, and enough matching evidence to explain the result. Persist the previous baseline, last match, check count, consecutive failures, and delivery state.
 
-| Condition | Evaluation | When to notify |
-| --- | --- | --- |
-| Page text changed | Compare normalized visible lines. Collapse whitespace, ignore relative-time-only changes, and summarize added, removed, and updated lines. | Use the first successful read as the baseline. Notify on each subsequent material difference. |
-| Phrase appears | Trim and collapse whitespace in phrase and page text, and compare case-insensitively. | Notify on first observed presence and again after absence followed by presence. |
+| Condition             | Evaluation                                                                                                                                            | When to notify                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Page text changed     | Compare normalized visible lines. Collapse whitespace, ignore relative-time-only changes, and summarize added, removed, and updated lines.            | Use the first successful read as the baseline. Notify on each subsequent material difference.                  |
+| Phrase appears        | Trim and collapse whitespace in phrase and page text, and compare case-insensitively.                                                                 | Notify on first observed presence and again after absence followed by presence.                                |
 | Price below threshold | Recognize a USD amount with a dollar sign or USD marker, allowing intervening whitespace. Compare numeric amounts using a strict less-than threshold. | Notify on the first matching observation in each uninterrupted sequence of matches. Equality does not qualify. |
 
 ### Scheduling and delivery
 
-Create the watch in the workspace resolved from the owner's session. The worker claims each due run through the durable task scheduler using the saved workspace and task IDs. A watch continues when its creator signs out. Tracking and the Tasks panel show the next check from the same saved schedule. [Bootstrap workspace access](../bootstrap/design.md#resolve-workspace-ownership-at-the-storage-boundary) · [Task scheduling](../model-task-recovery/proposal.md)
+Create the watch in the workspace resolved from the owner's session. The worker claims each due run through the durable task scheduler using the saved workspace and task IDs. A watch continues when its creator signs out. Tracking and the Tasks panel show the next check from the same saved schedule. [Bootstrap workspace access](../archive/2026-11-22-bootstrap/design.md#resolve-workspace-ownership-at-the-storage-boundary) · [Task scheduling](../model-task-recovery/proposal.md)
 
 Save the new baseline and a recoverable alert intent for the same observation together. Identify delivery by workspace, watch, and observation. Replacing a workspace VM preserves the baseline and pending delivery in PostgreSQL. A worker restarting after the baseline advances can finish publication. A replay finds the existing inbox item. Link the item to the observation, target, and watch. Persist the next eligible time so a restart cannot produce an extra scheduled check.
 

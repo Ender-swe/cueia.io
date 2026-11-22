@@ -1,0 +1,100 @@
+import { useEffect, useRef, useState } from "react";
+import { AttachmentPreview } from "@cueia/components";
+import { SearchBox } from "../../components/search-box";
+import { api, type Schema } from "../../api";
+import { DirectoryToolbar } from "./components/directory-toolbar";
+import { FileResults } from "./components/file-results";
+
+export function Files({ token }: { token: string }) {
+  const [directory, setDirectory] = useState(".");
+  const [query, setQuery] = useState("");
+  const [revision, refresh] = useState(0);
+  const [entries, setEntries] = useState<Schema["Entry"][] | null>(null);
+  const [error, setError] = useState("");
+  const [attachment, setAttachment] = useState<{
+    filename: string;
+    signedUrl: string;
+  } | null>(null);
+  const selected = useRef<HTMLButtonElement | null>(null);
+  const previewRequest = useRef<AbortController | null>(null);
+  const name = query.trim();
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const path = name
+      ? "/files/search?name=" + encodeURIComponent(name)
+      : "/files?directory=" + encodeURIComponent(directory);
+    setEntries(null);
+    setError("");
+    api<Schema["Entry"][]>(path, token, "GET", undefined, controller.signal)
+      .then((result) => {
+        if (!controller.signal.aborted) setEntries(result);
+      })
+      .catch((err) => {
+        if (!controller.signal.aborted) setError(err.message);
+      });
+    return () => {
+      controller.abort();
+      previewRequest.current?.abort();
+    };
+  }, [token, directory, name, revision]);
+
+  function openDirectory(path: string) {
+    setQuery("");
+    setDirectory(path);
+  }
+
+  async function preview(entry: Schema["Entry"], button: HTMLButtonElement) {
+    previewRequest.current?.abort();
+    const controller = new AbortController();
+    previewRequest.current = controller;
+    selected.current = button;
+    setError("");
+    try {
+      const { fileId } = await api<{ fileId: string }>(
+        "/documents",
+        token,
+        "POST",
+        { path: entry.path },
+        controller.signal,
+      );
+      const link = await api<Schema["Preview"]>(
+        "/documents/" + fileId + "/preview-links",
+        token,
+        "POST",
+        undefined,
+        controller.signal,
+      );
+      if (!controller.signal.aborted)
+        setAttachment({ filename: entry.name, signedUrl: link.url });
+    } catch (err) {
+      if (!controller.signal.aborted)
+        setError(err instanceof Error ? err.message : "Could not open PDF.");
+    }
+  }
+
+  return (
+    <>
+      <SearchBox label="Search files" value={query} onChange={setQuery} />
+      <DirectoryToolbar
+        directory={directory}
+        openDirectory={openDirectory}
+        onRefresh={() => refresh((n) => n + 1)}
+      />
+      <FileResults
+        entries={entries}
+        error={error}
+        searching={!!name}
+        openDirectory={openDirectory}
+        preview={preview}
+      />
+      <AttachmentPreview
+        attachment={attachment}
+        onClose={() => {
+          setAttachment(null);
+          selected.current?.focus();
+        }}
+      />
+    </>
+  );
+}

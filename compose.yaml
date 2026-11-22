@@ -1,0 +1,59 @@
+name: cueia-${CUEIA_MODE:-sample}
+
+x-service: &service
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+  environment: &app-env
+    DATABASE_URL: postgres://cueia:${POSTGRES_PASSWORD:?set a URL-safe PostgreSQL password}@postgres:5432/cueia
+    CUEIA_MODE: ${CUEIA_MODE:-sample}
+    CUEIA_DEPLOYMENT_ID: ${COMPOSE_PROJECT_NAME}
+  networks: [default, workspace]
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: cueia
+      POSTGRES_USER: cueia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "cueia", "-d", "cueia"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  migrate:
+    build:
+      context: .
+      target: migrate
+    environment:
+      DATABASE_URL: postgres://cueia:${POSTGRES_PASSWORD}@postgres:5432/cueia
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    <<: *service
+    build:
+      context: .
+      target: api
+    ports:
+      - "127.0.0.1:${CUEIA_PORT:-8080}:8080"
+    environment:
+      <<: *app-env
+      CUEIA_LISTEN_ADDR: ":8080"
+      CLERK_ISSUER: ${CLERK_ISSUER:-}
+      CLERK_AUTHORIZED_PARTY: ${CLERK_AUTHORIZED_PARTY:-}
+      CPK_INTELLIGENCE_API_KEY: ${CPK_INTELLIGENCE_API_KEY:-}
+  worker:
+    <<: *service
+    build:
+      context: .
+      target: worker
+networks:
+  workspace:
+    external: true
+    name: ${WORKSPACE_NETWORK:-${COMPOSE_PROJECT_NAME}_workspace}
+volumes:
+  database:

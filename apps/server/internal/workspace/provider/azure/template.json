@@ -1,0 +1,131 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "size": {
+      "type": "string"
+    },
+    "image": {
+      "type": "string"
+    },
+    "subnet": {
+      "type": "string"
+    },
+    "adminKey": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/disks",
+      "apiVersion": "2024-03-02",
+      "name": "[concat(parameters('name'),'-data')]",
+      "location": "[parameters('region')]",
+      "tags": {
+        "cueia-owner": "[parameters('name')]"
+      },
+      "properties": {
+        "creationData": {
+          "createOption": "Empty"
+        },
+        "diskSizeGB": 32,
+        "networkAccessPolicy": "DenyAll",
+        "publicNetworkAccess": "Disabled"
+      },
+      "sku": {
+        "name": "StandardSSD_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2024-05-01",
+      "name": "[concat(parameters('name'),'-nic')]",
+      "location": "[parameters('region')]",
+      "tags": {
+        "cueia-owner": "[parameters('name')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "private",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[parameters('subnet')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2024-11-01",
+      "name": "[parameters('name')]",
+      "location": "[parameters('region')]",
+      "tags": {
+        "cueia-owner": "[parameters('name')]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('size')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('name')]",
+          "adminUsername": "cueiaadmin",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "/home/cueiaadmin/.ssh/authorized_keys",
+                  "keyData": "[parameters('adminKey')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "id": "[parameters('image')]"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "deleteOption": "Delete"
+          },
+          "dataDisks": [
+            {
+              "name": "[concat(parameters('name'),'-data')]",
+              "lun": 0,
+              "createOption": "Attach",
+              "deleteOption": "Detach",
+              "managedDisk": {
+                "id": "[resourceId('Microsoft.Compute/disks',concat(parameters('name'),'-data'))]"
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('name'),'-nic'))]",
+              "properties": {
+                "deleteOption": "Detach"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/disks',concat(parameters('name'),'-data'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('name'),'-nic'))]"
+      ]
+    }
+  ]
+}

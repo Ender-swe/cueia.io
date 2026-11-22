@@ -1,0 +1,35 @@
+package routes_test
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
+)
+
+func TestWorkspaceRoutesRequireSession(t *testing.T) {
+	mux := http.NewServeMux()
+	routes.RegisterWorkspace(mux, func(context.Context, string) (string, error) { return "", session.ErrUnauthorized }, workspace.NewHandler(nil))
+	for _, route := range []struct{ method, path string }{
+		{"GET", "/workspace"}, {"GET", "/mail/threads"}, {"GET", "/calendar/events"},
+		{"PATCH", "/workspace/preferences"}, {"GET", "/files"}, {"GET", "/files/search"}, {"GET", "/files/content"},
+	} {
+		t.Run(route.path, func(t *testing.T) {
+			for _, token := range []string{"", "invalid"} {
+				req := httptest.NewRequest(route.method, route.path, nil)
+				if token != "" {
+					req.Header.Set("Authorization", "Bearer "+token)
+				}
+				res := httptest.NewRecorder()
+				mux.ServeHTTP(res, req)
+				if res.Code != http.StatusUnauthorized || res.Header().Get("Cache-Control") != "no-store" {
+					t.Fatalf("token %q: status %d, headers %v", token, res.Code, res.Header())
+				}
+			}
+		})
+	}
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@cueia/components",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "bun test --pass-with-no-tests"
+  },
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@cueia/ui": "workspace:*",
+    "@react-spectrum/s2": "1.8.2",
+    "motion": "^14.14.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}

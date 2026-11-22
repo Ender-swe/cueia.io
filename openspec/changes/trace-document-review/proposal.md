@@ -8,7 +8,7 @@ A person can receive a fillable form, supply missing answers, inspect the comple
 
 ### File intake and typed answers
 
-Accept a PDF upload, a workspace PDF selected from Files, or an attachment from an owned message. For an ordinary PDF, register the version at its normalized workspace-relative path. Concurrent registrations of the same path and bytes return one `fileId`. An edit yields a new version on registration. For a managed attachment, reuse the `fileId` already shared by the mail message and its Files entry. Save that input ID at intake so parsing, filling, and recovery all read the same bytes. [Bootstrap PDF registration](../bootstrap/design.md#register-a-pdf-from-files)
+Accept a PDF upload, a workspace PDF selected from Files, or an attachment from an owned message. For an ordinary PDF, register the version at its normalized workspace-relative path. Concurrent registrations of the same path and bytes return one `fileId`. An edit yields a new version on registration. For a managed attachment, reuse the `fileId` already shared by the mail message and its Files entry. Save that input ID at intake so parsing, filling, and recovery all read the same bytes. [Bootstrap PDF registration](../archive/2026-11-22-bootstrap/design.md#register-a-pdf-from-files)
 
 For mail imports, bind the document to the owner, account connection generation, message, and attachment ID. Repeat imports of that attachment within that connection reuse the document. Keep original and filled bytes on the owner's persistent VM disk. Store each version's ID, display name, size, and source metadata in PostgreSQL. Issue an expiring read-only link for the selected version when the owner previews or shares it. A send requires a separate ledger decision.
 

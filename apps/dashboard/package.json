@@ -1,0 +1,32 @@
+{
+  "name": "@cueia/dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "type-check": "tsc --noEmit",
+    "test": "bun test --pass-with-no-tests",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@clerk/react": "^6.19.2",
+    "@cueia/api-types": "workspace:*",
+    "@cueia/components": "workspace:*",
+    "@cueia/ui": "workspace:*",
+    "@fontsource-variable/dm-sans": "5.2.8",
+    "@react-spectrum/s2": "1.8.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "7",
+    "vite": "7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5",
+    "tailwindcss": "4"
+  }
+}

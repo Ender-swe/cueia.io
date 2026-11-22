@@ -1,0 +1,9 @@
+**
+!apps/server/
+!apps/server/**
+!package.json
+!bun.lock
+!tsconfig.base.json
+!apps/dashboard/package.json
+!apps/browser-worker/package.json
+!packages/*/package.json

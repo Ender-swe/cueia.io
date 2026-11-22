@@ -1,0 +1,10 @@
+services:
+  api:
+    user: "${CUEIA_TEST_UID:?set the test disk owner UID}:${CUEIA_TEST_GID:?set the test disk owner GID}"
+    environment:
+      CUEIA_TEST_VOLUME_ROOT: /test-disks
+      CUEIA_TEST_PREVIEW_CLOCK_OFFSET: ${CUEIA_TEST_PREVIEW_CLOCK_OFFSET:-0s}
+    volumes:
+      - type: bind
+        source: ${CUEIA_TEST_DISK_DIR:?set a disposable test disk directory}
+        target: /test-disks

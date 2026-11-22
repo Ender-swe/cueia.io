@@ -1,0 +1,9 @@
+{
+  "invitationSender": "mara@northpier.example",
+  "workshopLocalDate": "2026-10-17",
+  "workshopLocalTime": "10:00",
+  "workshopTimeZone": "America/Chicago",
+  "attachmentName": "north-pier-registration.pdf",
+  "formFields": ["participant_name", "contact_email"],
+  "defaultTimeFormat": "12h"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@cueia/api-types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "type-check": "openapi-typescript ../../apps/server/api/openapi.yaml -o src/contract.ts --check && tsc --noEmit",
+    "test": "bun test --pass-with-no-tests",
+    "generate": "openapi-typescript ../../apps/server/api/openapi.yaml -o src/contract.ts"
+  },
+  "exports": "./src/index.ts",
+  "devDependencies": {
+    "openapi-typescript": "7.10.1"
+  }
+}
