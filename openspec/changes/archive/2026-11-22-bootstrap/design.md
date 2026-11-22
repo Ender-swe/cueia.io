@@ -6,7 +6,7 @@ Cueia has planning documents and no application or database to migrate. The firs
 
 ## Goals / Non-Goals
 
-One verified Clerk subject maps to one durable workspace per deployment with its own machine identity and persistent disk. Separate Cueia sessions can share that workspace and expire independently. The same Go storage code and SQL migrations serve the API, worker, and integration tests. The worker boundary in this change ends at a versioned claim. Scheduling, leases, retries, and task execution belong to [task recovery](../model-task-recovery/proposal.md).
+One verified Clerk subject maps to one durable workspace per deployment with its own machine identity and persistent disk. Separate Cueia sessions can share that workspace and expire independently. The same Go storage code and SQL migrations serve the API, worker, and integration tests. The worker boundary in this change ends at a versioned claim. Scheduling, leases, retries, and task execution belong to [task recovery](../../model-task-recovery/proposal.md).
 
 ## Decisions
 

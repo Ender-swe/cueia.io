@@ -18,7 +18,7 @@ Create an owner-bound watch with target URL, condition and value, interval, link
 
 ### Scheduling and delivery
 
-Create the watch in the workspace resolved from the owner's session. The worker claims each due run through the durable task scheduler using the saved workspace and task IDs. A watch continues when its creator signs out. Tracking and the Tasks panel show the next check from the same saved schedule. [Bootstrap workspace access](../bootstrap/design.md#resolve-workspace-ownership-at-the-storage-boundary) · [Task scheduling](../model-task-recovery/proposal.md)
+Create the watch in the workspace resolved from the owner's session. The worker claims each due run through the durable task scheduler using the saved workspace and task IDs. A watch continues when its creator signs out. Tracking and the Tasks panel show the next check from the same saved schedule. [Bootstrap workspace access](../archive/2026-11-22-bootstrap/design.md#resolve-workspace-ownership-at-the-storage-boundary) · [Task scheduling](../model-task-recovery/proposal.md)
 
 Save the new baseline and a recoverable alert intent for the same observation together. Identify delivery by workspace, watch, and observation. Replacing a workspace VM preserves the baseline and pending delivery in PostgreSQL. A worker restarting after the baseline advances can finish publication. A replay finds the existing inbox item. Link the item to the observation, target, and watch. Persist the next eligible time so a restart cannot produce an extra scheduled check.
 
