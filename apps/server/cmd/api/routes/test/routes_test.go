@@ -42,7 +42,7 @@ func TestProviders(t *testing.T) {
 		{"database unavailable", "Bearer db-down", probes, 503, `{"code":"unavailable","message":"Service Unavailable"}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/api/providers", nil)
+			req := httptest.NewRequest("GET", "/providers", nil)
 			req.Header.Set("Authorization", tc.authorization)
 			rec := httptest.NewRecorder()
 			mux := http.NewServeMux()
@@ -59,7 +59,7 @@ func TestPublicHealth(t *testing.T) {
 	rec := httptest.NewRecorder()
 	mux := http.NewServeMux()
 	routes.RegisterStatus(mux, nil, nil)
-	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/api/health", nil))
+	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/health", nil))
 	if rec.Code != 200 || strings.TrimSpace(rec.Body.String()) != `{"status":"ok"}` {
 		t.Fatalf("unexpected health response: %d %s", rec.Code, rec.Body)
 	}

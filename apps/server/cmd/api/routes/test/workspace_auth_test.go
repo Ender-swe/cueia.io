@@ -15,8 +15,8 @@ func TestWorkspaceRoutesRequireSession(t *testing.T) {
 	mux := http.NewServeMux()
 	routes.RegisterWorkspace(mux, func(context.Context, string) (string, error) { return "", session.ErrUnauthorized }, workspace.NewHandler(nil))
 	for _, route := range []struct{ method, path string }{
-		{"GET", "/api/workspace"}, {"GET", "/api/mail/threads"}, {"GET", "/api/calendar/events"},
-		{"PATCH", "/api/workspace/preferences"}, {"GET", "/api/files"}, {"GET", "/api/files/search"}, {"GET", "/api/files/content"},
+		{"GET", "/workspace"}, {"GET", "/mail/threads"}, {"GET", "/calendar/events"},
+		{"PATCH", "/workspace/preferences"}, {"GET", "/files"}, {"GET", "/files/search"}, {"GET", "/files/content"},
 	} {
 		t.Run(route.path, func(t *testing.T) {
 			for _, token := range []string{"", "invalid"} {

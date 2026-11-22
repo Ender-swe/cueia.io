@@ -36,7 +36,9 @@ apps/server/
       issuer.go           # Token issuer used by the session tests
 ```
 
-Add endpoints to the owning feature's file in `cmd/api/routes/`. Name the domain struct file after the feature, as in `session/session.go`. For example, `sessions.go` registers `POST /api/session` with `ExchangeHTTP` in `handler.go`. The handler calls `Service.Exchange` in `service.go`, which uses `createSession` in `memory.go` to persist the session.
+Add endpoints to the owning feature's file in `cmd/api/routes/` using paths relative to the shared `/api` prefix. After registering all feature routes, `routes.New` mounts their mux at `/api/` and strips the prefix before dispatch. For example, `sessions.go` registers `POST /session`, and clients call `POST /api/session`.
+
+Name the domain struct file after the feature, as in `session/session.go`. The session route invokes `ExchangeHTTP` in `handler.go`. The handler calls `Service.Exchange` in `service.go`, which uses `createSession` in `memory.go` to persist the session.
 
 Put every Go test in the closest `test/` folder to the code it exercises. Create that folder directly under the owning package when needed. This applies to unit and integration tests alike. A session persistence test belongs in `internal/session/test/`, and a session route registration test belongs in `cmd/api/routes/test/`.
 

@@ -29,14 +29,17 @@ func New(sessions *session.Service, store *workspace.Service, signer document.Si
 	RegisterSessions(mux, sessions)
 	RegisterWorkspace(mux, sessions.Authenticate, workspace.NewHandler(store))
 	RegisterDocuments(mux, sessions.Authenticate, document.NewHandler(store, signer))
-	return sessions.Protect(mux, middleware.NewLimiter(), sessionPath)
+	const prefix = "/api"
+	root := http.NewServeMux()
+	root.Handle(prefix+"/", http.StripPrefix(prefix, mux))
+	return sessions.Protect(root, middleware.NewLimiter(), prefix+sessionPath)
 }
 
 func RegisterStatus(mux *http.ServeMux, authenticate func(context.Context, string) (string, error), providers []OptionalProvider) {
-	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		middleware.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
-	mux.HandleFunc("GET /api/providers", session.Require(authenticate, func(w http.ResponseWriter, r *http.Request, _ string) {
+	mux.HandleFunc("GET /providers", session.Require(authenticate, func(w http.ResponseWriter, r *http.Request, _ string) {
 		statuses := make([]providerStatus, 0, len(providers))
 		for _, p := range providers {
 			status := "disabled"

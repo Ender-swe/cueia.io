@@ -6,7 +6,7 @@ import (
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 )
 
-const sessionPath = "/api/session"
+const sessionPath = "/session"
 
 func RegisterSessions(mux *http.ServeMux, service *session.Service) {
 	h := session.NewHandler(service)

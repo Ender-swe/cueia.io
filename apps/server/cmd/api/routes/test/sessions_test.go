@@ -25,14 +25,14 @@ func TestSessionRoutes(t *testing.T) {
 	routes.RegisterSessions(mux, service)
 	call := func(method, token string, status int) *httptest.ResponseRecorder {
 		t.Helper()
-		r := httptest.NewRequest(method, "/api/session", nil)
+		r := httptest.NewRequest(method, "/session", nil)
 		if token != "" {
 			r.Header.Set("Authorization", "Bearer "+token)
 		}
 		w := httptest.NewRecorder()
 		mux.ServeHTTP(w, r)
 		if w.Code != status {
-			t.Fatalf("%s /api/session: got %d, want %d", method, w.Code, status)
+			t.Fatalf("%s /session: got %d, want %d", method, w.Code, status)
 		}
 		return w
 	}

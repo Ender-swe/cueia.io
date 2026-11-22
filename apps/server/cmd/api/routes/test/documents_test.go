@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -36,8 +37,8 @@ func TestPreviewRoute(t *testing.T) {
 		name, url string
 		status    int
 	}{
-		{"signed link", link.URL, http.StatusOK},
-		{"missing token", "/api/previews/" + fileID, http.StatusForbidden},
+		{"signed link", strings.TrimPrefix(link.URL, "/api"), http.StatusOK},
+		{"missing token", "/previews/" + fileID, http.StatusForbidden},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
