@@ -1,10 +1,9 @@
-package session
+package middleware
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
-
-	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 )
 
 // Count an authentication failure only after the handler has checked the credential.
@@ -17,7 +16,7 @@ type failureWriter struct {
 func (w *failureWriter) WriteHeader(status int) {
 	if status == http.StatusUnauthorized && !w.count() {
 		w.throttled = true
-		reject(w.ResponseWriter, 429, "rate_limited")
+		Reject(w.ResponseWriter, 429, "rate_limited")
 		return
 	}
 	w.ResponseWriter.WriteHeader(status)
@@ -29,16 +28,16 @@ func (w *failureWriter) Write(data []byte) (int, error) {
 	return w.ResponseWriter.Write(data)
 }
 
-func (s *Service) Protect(next http.Handler, limiter *middleware.Limiter) http.Handler {
+func Protect(next http.Handler, limiter *Limiter, authorizedParty, sessionPath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
 		origins := r.Header.Values("Origin")
 		if len(origins) > 0 {
-			if len(origins) != 1 || origins[0] != s.authorizedParty {
-				reject(w, 403, "forbidden")
+			if len(origins) != 1 || origins[0] != authorizedParty {
+				Reject(w, 403, "forbidden")
 				return
 			}
-			w.Header().Set("Access-Control-Allow-Origin", s.authorizedParty)
+			w.Header().Set("Access-Control-Allow-Origin", authorizedParty)
 			if r.Method == http.MethodOptions {
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
@@ -51,9 +50,15 @@ func (s *Service) Protect(next http.Handler, limiter *middleware.Limiter) http.H
 			peer = r.RemoteAddr
 		}
 		if r.Method == "POST" && r.URL.Path == sessionPath && limiter.Exhausted(peer) {
-			reject(w, 429, "rate_limited")
+			Reject(w, 429, "rate_limited")
 			return
 		}
 		next.ServeHTTP(&failureWriter{ResponseWriter: w, count: func() bool { return limiter.Allow(peer) }}, r)
 	})
+}
+
+func Reject(w http.ResponseWriter, status int, code string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"code": code, "message": http.StatusText(status)})
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -33,7 +34,7 @@ func (h *Handler) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, ErrUnauthorized) {
 			status, code = http.StatusUnauthorized, "unauthorized"
 		}
-		reject(w, status, code)
+		middleware.Reject(w, status, code)
 		return
 	}
 	_ = json.NewEncoder(w).Encode(credential)
@@ -43,11 +44,11 @@ func (h *Handler) RevokeHTTP(w http.ResponseWriter, r *http.Request, _ string) {
 	if err := h.sessions.Revoke(r.Context(), bearerToken(r)); err != nil {
 		switch {
 		case errors.Is(err, fs.ErrInvalid):
-			reject(w, 400, "invalid_request")
+			middleware.Reject(w, 400, "invalid_request")
 		case errors.Is(err, fs.ErrNotExist), errors.Is(err, pgx.ErrNoRows):
-			reject(w, 404, "not_found")
+			middleware.Reject(w, 404, "not_found")
 		default:
-			reject(w, 503, "unavailable")
+			middleware.Reject(w, 503, "unavailable")
 		}
 		return
 	}
@@ -61,16 +62,16 @@ func Require(authenticate func(context.Context, string) (string, error), next Ow
 		w.Header().Set("Cache-Control", "no-store")
 		token := bearerToken(r)
 		if token == "" {
-			reject(w, 401, "unauthorized")
+			middleware.Reject(w, 401, "unauthorized")
 			return
 		}
 		owner, err := authenticate(r.Context(), token)
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, ErrUnauthorized) {
-			reject(w, 401, "unauthorized")
+			middleware.Reject(w, 401, "unauthorized")
 			return
 		}
 		if err != nil {
-			reject(w, 503, "unavailable")
+			middleware.Reject(w, 503, "unavailable")
 			return
 		}
 		next(w, r, owner)
@@ -90,8 +91,6 @@ func bearerToken(r *http.Request) string {
 	return fields[1]
 }
 
-func reject(w http.ResponseWriter, status int, code string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]string{"code": code, "message": http.StatusText(status)})
+func (s *Service) Protect(next http.Handler, limiter *middleware.Limiter) http.Handler {
+	return middleware.Protect(next, limiter, s.authorizedParty, sessionPath)
 }

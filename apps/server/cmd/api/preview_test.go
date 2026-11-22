@@ -40,7 +40,7 @@ func TestPreviewAcrossServers(t *testing.T) {
 			}
 			mux := routes(s.Authenticate, nil)
 			workspaceRoutes(mux, s, store)
-			previewRoutes(mux, s, store, signer)
+			document.NewHandler(s, store, signer).Register(mux)
 			servers[i] = httptest.NewServer(mux)
 		})
 	}

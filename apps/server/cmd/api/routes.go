@@ -2,14 +2,11 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"io/fs"
 	"net/http"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
-	"github.com/jackc/pgx/v5"
 )
 
 type optionalProvider struct {
@@ -26,7 +23,7 @@ type providerStatus struct {
 func routes(authenticate func(context.Context, string) (string, error), providers []optionalProvider) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+		middleware.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	mux.HandleFunc("GET /api/providers", session.Require(authenticate, func(w http.ResponseWriter, r *http.Request, _ string) {
 		statuses := make([]providerStatus, 0, len(providers))
@@ -43,28 +40,7 @@ func routes(authenticate func(context.Context, string) (string, error), provider
 			}
 			statuses = append(statuses, providerStatus{p.name, status})
 		}
-		writeJSON(w, http.StatusOK, statuses)
+		middleware.WriteJSON(w, http.StatusOK, statuses)
 	}))
 	return mux
-}
-
-func respondError(w http.ResponseWriter, err error) {
-	switch {
-	case errors.Is(err, fs.ErrInvalid):
-		writeError(w, 400, "invalid_request")
-	case errors.Is(err, fs.ErrNotExist), errors.Is(err, pgx.ErrNoRows):
-		writeError(w, 404, "not_found")
-	default:
-		writeError(w, 503, "unavailable")
-	}
-}
-
-func writeError(w http.ResponseWriter, status int, code string) {
-	writeJSON(w, status, map[string]string{"code": code, "message": http.StatusText(status)})
-}
-
-func writeJSON(w http.ResponseWriter, status int, body any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
 }

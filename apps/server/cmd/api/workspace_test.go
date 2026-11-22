@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
@@ -50,6 +51,11 @@ func TestWorkspaceHTTP(t *testing.T) {
 	}
 	mux := routes(s.Authenticate, nil)
 	workspaceRoutes(mux, s, store)
+	signer, err := document.Load(t.Context(), store.DB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	document.NewHandler(s, store, signer).Register(mux)
 	alice := uuid.NewString()
 	a := login(t, mux, issuer.Token(t, alice)).Token
 	b := login(t, mux, issuer.Token(t, alice)).Token

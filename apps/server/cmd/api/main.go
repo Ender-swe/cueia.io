@@ -60,7 +60,7 @@ func run(ctx context.Context) error {
 		signer.Now = func() time.Time { return time.Now().Add(advance) }
 	}
 
-	previewRoutes(mux, sessions, store, signer)
+	document.NewHandler(sessions, store, signer).Register(mux)
 
 	server := &http.Server{Addr: settings.Addr, Handler: sessions.Protect(mux, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
 	done := make(chan error, 1)

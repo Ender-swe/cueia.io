@@ -43,7 +43,7 @@ func TestBrowserJourney(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	previewRoutes(mux, s, store, signer)
+	document.NewHandler(s, store, signer).Register(mux)
 	root := http.NewServeMux()
 	root.Handle("/api/", s.Protect(mux, middleware.NewLimiter()))
 	for _, path := range []string{"/workspace", "/sign-in", "/sign-in/", "/sign-up", "/sign-up/"} {
