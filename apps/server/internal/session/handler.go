@@ -21,8 +21,8 @@ func NewHandler(sessions *Service) *Handler {
 }
 
 func (h *Handler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("POST /api/session", h.ExchangeHTTP)
-	mux.HandleFunc("DELETE /api/session", Require(h.sessions.Authenticate, h.RevokeHTTP))
+	mux.HandleFunc(exchangeRoute, h.ExchangeHTTP)
+	mux.HandleFunc(revokeRoute, Require(h.sessions.Authenticate, h.RevokeHTTP))
 }
 
 func (h *Handler) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +127,7 @@ func Protect(next http.Handler, origin string, limiter *middleware.Limiter) http
 		if err != nil {
 			peer = r.RemoteAddr
 		}
-		if r.Method == "POST" && r.URL.Path == "/api/session" && limiter.Exhausted(peer) {
+		if r.Method == "POST" && r.URL.Path == sessionPath && limiter.Exhausted(peer) {
 			reject(w, 429, "rate_limited")
 			return
 		}

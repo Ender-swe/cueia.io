@@ -11,6 +11,7 @@ import (
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/testutil"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 )
 
@@ -21,7 +22,7 @@ func TestBrowserJourney(t *testing.T) {
 	if issuer == "" {
 		t.Skip("requires an interactive Clerk test login")
 	}
-	store := testWorkspace(t, "sample")
+	store := testutil.Workspace(t, "sample")
 	dist, err := filepath.Abs("../../../dashboard/dist")
 	if err != nil {
 		t.Fatal(err)

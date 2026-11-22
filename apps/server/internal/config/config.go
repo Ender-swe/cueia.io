@@ -4,28 +4,27 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 )
 
 type API struct {
-	Mode            string
-	Addr            string
-	ClerkIssuer     string
-	AuthorizedParty string
+	Mode    string
+	Addr    string
+	Session session.Config
 }
 
 func LoadAPI() (API, error) {
-	c := API{Mode: os.Getenv("CUEIA_MODE"), Addr: os.Getenv("CUEIA_LISTEN_ADDR"), ClerkIssuer: os.Getenv("CLERK_ISSUER"), AuthorizedParty: os.Getenv("CLERK_AUTHORIZED_PARTY")}
+	sessions, missing := session.LoadConfig()
+	c := API{Mode: os.Getenv("CUEIA_MODE"), Addr: os.Getenv("CUEIA_LISTEN_ADDR"), Session: sessions}
 	if c.Mode == "" {
 		c.Mode = "sample"
 	}
 	if c.Mode != "sample" && c.Mode != "live" {
 		return c, fmt.Errorf("invalid CUEIA_MODE")
 	}
-	var missing []string
-	for _, k := range []string{"CLERK_ISSUER", "CLERK_AUTHORIZED_PARTY", "CPK_INTELLIGENCE_API_KEY"} {
-		if strings.TrimSpace(os.Getenv(k)) == "" {
-			missing = append(missing, k)
-		}
+	if strings.TrimSpace(os.Getenv("CPK_INTELLIGENCE_API_KEY")) == "" {
+		missing = append(missing, "CPK_INTELLIGENCE_API_KEY")
 	}
 	if len(missing) > 0 {
 		return c, fmt.Errorf("missing settings: %s", strings.Join(missing, ", "))

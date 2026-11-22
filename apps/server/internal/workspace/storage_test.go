@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"io/fs"
 	"net/url"
 	"os"
@@ -20,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/sample"
@@ -227,68 +226,15 @@ func TestStorageIsolation(t *testing.T) {
 	}
 }
 
-func TestFirstExchangesRecover(t *testing.T) {
-	s := testService(t)
-	f := s.Provider.(*providertest.Fixture)
+func TestLiveProvisioningUsesSeparateDisk(t *testing.T) {
 	ctx := t.Context()
-	sub := "first-" + uuid.NewString()
-	f.AfterAllocate = func(provider.Machine) error { return errors.New("lost response") }
-	verify := func(_ context.Context, token string) (string, error) { return token, nil }
-	sessions := session.NewService(s.DB, verify, s.Provision)
-	if _, err := sessions.Exchange(ctx, sub); err == nil {
-		t.Fatal("expected interruption")
-	}
-	f.AfterAllocate = nil
-	var pending string
-	if err := s.DB.QueryRow(ctx, "SELECT workspace_id FROM users WHERE clerk_user_id=$1", sub).Scan(&pending); err != nil {
-		t.Fatal(err)
-	}
-	// Fail the final seed insert once, after disk publication and before commit.
-	schema := "fault_" + strings.ReplaceAll(uuid.NewString(), "-", "")
-	_, err := s.DB.Exec(ctx, fmt.Sprintf(`CREATE FUNCTION %s() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.workspace_id='%s'::uuid THEN RAISE EXCEPTION 'fixture interruption'; END IF; RETURN NEW; END $$;
- CREATE TRIGGER %s BEFORE INSERT ON workspace_preferences FOR EACH ROW EXECUTE FUNCTION %s()`, schema, pending, schema, schema))
+	sampleStore := testService(t)
+	sub := uuid.NewString()
+	pending, err := sampleStore.Provision(ctx, sub)
 	if err != nil {
 		t.Fatal(err)
 	}
-	undo := fmt.Sprintf("DROP FUNCTION IF EXISTS %s() CASCADE", schema)
-	defer s.DB.Exec(context.Background(), undo)
-	if _, err = sessions.Exchange(ctx, sub); err == nil {
-		t.Fatal("expected interrupted transaction")
-	}
-	if _, err = s.Snapshot(ctx, pending); !errors.Is(err, pgx.ErrNoRows) {
-		t.Fatal("partial snapshot", err)
-	}
-	if _, err = s.DB.Exec(ctx, undo); err != nil {
-		t.Fatal(err)
-	}
-	start := make(chan struct{})
-	var creds [2]session.Credential
-	var errs [2]error
-	var wg sync.WaitGroup
-	for i := range creds {
-		wg.Go(func() { <-start; creds[i], errs[i] = sessions.Exchange(ctx, sub) })
-	}
-	close(start)
-	wg.Wait()
-	if errs[0] != nil || errs[1] != nil || creds[0].Token == creds[1].Token {
-		t.Fatal("exchanges", errs)
-	}
-	for _, c := range creds {
-		w, err := sessions.Authenticate(ctx, c.Token)
-		if err != nil || w != pending {
-			t.Fatal(w, err)
-		}
-	}
-	for _, name := range []string{"workspace_machines", "mail_messages", "mail_threads", "calendar_events", "files", "mail_attachments"} {
-		var n int
-		if err = s.DB.QueryRow(ctx, "SELECT count(*) FROM "+name+" WHERE workspace_id=$1", pending).Scan(&n); err != nil || n != 1 {
-			t.Fatal(name, n, err)
-		}
-	}
-	dirs, err := os.ReadDir(f.Directory)
-	if err != nil || len(dirs) != 1 {
-		t.Fatal("disk allocations", err)
-	}
+	f := sampleStore.Provider.(*providertest.Fixture)
 	live := testService(t)
 	isolated := "live_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 	_, err = live.DB.Exec(ctx, "CREATE SCHEMA "+isolated)
@@ -323,41 +269,30 @@ func TestFirstExchangesRecover(t *testing.T) {
 	if err != nil || string(v.Threads) != "[]" || len(v.Preferences) != 0 {
 		t.Fatal("live seed", err)
 	}
-	dirs, err = os.ReadDir(f.Directory)
+	dirs, err := os.ReadDir(f.Directory)
 	if err != nil || len(dirs) != 2 {
 		t.Fatal("live disk", err)
 	}
 }
 
-func TestOwnerCollectionsAndSessions(t *testing.T) {
+func TestOwnerCollections(t *testing.T) {
 	s := testService(t)
 	ctx := t.Context()
-	sessions := session.NewService(s.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, s.Provision)
-	sub := uuid.NewString()
-	login := func(sub string) session.Credential {
+	provision := func() string {
 		t.Helper()
-		c, err := sessions.Exchange(ctx, sub)
+		owner, err := s.Provision(ctx, uuid.NewString())
 		if err != nil {
 			t.Fatal(err)
 		}
-		return c
+		return owner
 	}
-	a, b, other := login(sub), login(sub), login(uuid.NewString())
-	owner := func(c session.Credential) string {
-		t.Helper()
-		w, err := sessions.Authenticate(ctx, c.Token)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return w
-	}
-	alice, bob := owner(a), owner(other)
+	alice, bob := provision(), provision()
 	if _, err := s.Preferences(ctx, alice, map[string]string{"timeFormat": "24h"}); err != nil {
 		t.Fatal(err)
 	}
-	snap, err := s.Snapshot(ctx, owner(b))
+	snap, err := s.Snapshot(ctx, alice)
 	if err != nil || snap.Preferences["timeFormat"] != "24h" {
-		t.Fatal("other session did not see preference", err)
+		t.Fatal("owner preference missing", err)
 	}
 	var threads, events, fileIDs []string
 	for _, w := range []string{alice, bob} {

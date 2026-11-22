@@ -41,7 +41,7 @@ func run(ctx context.Context) error {
 		}
 		store.Provider, store.ProviderName, store.Region = machines, "azure", os.Getenv("AZURE_LOCATION")
 	}
-	sessions := session.NewService(db, session.Clerk(ctx, settings.ClerkIssuer, settings.AuthorizedParty), store.Provision)
+	sessions := session.NewService(db, session.Clerk(ctx, settings.Session.ClerkIssuer, settings.Session.AuthorizedParty), store.Provision)
 	mux := routes(sessions.Authenticate, nil)
 	workspaceRoutes(mux, sessions, store)
 	signer, err := document.Load(ctx, db)
@@ -56,7 +56,7 @@ func run(ctx context.Context) error {
 		signer.Now = func() time.Time { return time.Now().Add(advance) }
 	}
 	previewRoutes(mux, sessions, store, signer)
-	server := &http.Server{Addr: settings.Addr, Handler: session.Protect(mux, settings.AuthorizedParty, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: settings.Addr, Handler: session.Protect(mux, settings.Session.AuthorizedParty, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
 	done := make(chan error, 1)
 	go func() { done <- server.ListenAndServe() }()
 	select {
