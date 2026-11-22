@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Preserve each person's private workspace VM filesystem, records, and document identities across restarts so the owner and their agents can reopen the same files.
+Preserve each person's private workspace VM filesystem, records, and document identities across restarts so the owner and their agents can reopen the same files. In bootstrap acceptance scenarios, the internal provider represents each VM with a machine identity and each persistent disk with a separate directory.
 
 ## ADDED Requirements
 
 ### Requirement: One workspace per verified user
 
-The system SHALL create the user and their private workspace atomically. Each user SHALL have one unique Clerk subject and one unique workspace reference per deployment. Each workspace SHALL have a dedicated cloud VM with a persistent filesystem. Concurrent sign-ins and retries SHALL converge on that allocation before the workspace becomes available.
+The system SHALL create the user and their private workspace atomically. Each user SHALL have one unique Clerk subject and one unique workspace reference per deployment. Each workspace SHALL have its own machine identity and persistent filesystem. The bootstrap sample deployment and acceptance tests SHALL use the internal workspace provider. Concurrent sign-ins and retries SHALL converge on that allocation before the workspace becomes available.
 
 #### Scenario: First sign-ins arrive together
 

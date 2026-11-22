@@ -15,9 +15,9 @@ Sample and live APIs SHALL validate required Clerk settings and the server-side 
 1. **WHEN** either mode starts with required settings missing
 2. **THEN** startup identifies the missing settings by name and exits before opening an API listener.
 
-#### Scenario: A configured sample deployment starts
+#### Scenario: A configured sample deployment starts with Azure credentials unset
 
-1. **WHEN** a developer starts a correctly configured and migrated sample deployment
+1. **WHEN** a developer starts a migrated sample deployment with the required API and Clerk settings, the internal workspace provider configured, and Azure settings unset
 2. **THEN** the health check succeeds on loopback and the sample API has no externally published non-loopback listener.
 
 #### Scenario: Optional provider states are distinguishable
