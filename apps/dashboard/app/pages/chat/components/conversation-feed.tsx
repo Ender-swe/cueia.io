@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import { CalendarEntry, Correspondence } from "@cueia/components";
-import { SampleConversation } from "../../../components/sample-conversation";
+import { SampleConversation } from "../../../sample/conversation";
 import type { Schema } from "../../../api";
 export function ConversationFeed({
   feed,

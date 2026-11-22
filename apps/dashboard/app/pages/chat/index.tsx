@@ -6,7 +6,7 @@ import { ChatComposer, type Draft } from "./components/chat-composer";
 import { ContextPane } from "./components/context-pane";
 import { ConversationFeed } from "./components/conversation-feed";
 import { PreferencesDialog } from "./components/preferences-dialog";
-import { SampleFiles } from "../../components/sample-files";
+import { SampleFiles } from "../../sample/files";
 import { Files } from "../files";
 import { compactWorkspace, ResizableSidebar } from "../../components/resizable-sidebar";
 import { TaskDetails } from "../../components/task-details";

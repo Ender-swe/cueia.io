@@ -19,7 +19,7 @@ import {
 } from "react-router";
 import { AuthPage, authLocalization } from "./pages/auth";
 import { WorkspacePage } from "./pages/workspace";
-import { SampleWorkspace } from "./components/sample-workspace";
+import { SampleWorkspace } from "./sample/workspace";
 import "@fontsource-variable/dm-sans";
 import "./global.css";
 

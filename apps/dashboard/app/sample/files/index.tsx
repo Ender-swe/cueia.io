@@ -1,8 +1,8 @@
 import { useState } from "react";
 import File from "@react-spectrum/s2/icons/FileText";
 import { AttachmentPreview } from "@cueia/components";
-import { samplePdf } from "../../sample-content";
-import { SearchBox } from "../search-box";
+import { samplePdf } from "../content";
+import { SearchBox } from "../../components/search-box";
 
 export function SampleFiles() {
   const [query, setQuery] = useState("");

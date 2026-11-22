@@ -1,5 +1,5 @@
 import { CalendarEntry, Turn } from "@cueia/components";
-import { sample, reminderTime } from "../../sample-content";
+import { sample, reminderTime } from "../content";
 
 export function SampleConversation({ hour12 }: { hour12: boolean }) {
   const stamp = (minute: string) =>

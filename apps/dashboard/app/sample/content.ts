@@ -1,6 +1,6 @@
-import type { Schema } from "./api";
-import workshop from "../../server/internal/workspace/sample/workshop.json";
-import registrationUrl from "../../server/internal/workspace/sample/north-pier-registration.pdf?url";
+import type { Schema } from "../api";
+import workshop from "../../../server/internal/workspace/sample/workshop.json";
+import registrationUrl from "../../../server/internal/workspace/sample/north-pier-registration.pdf?url";
 
 export const samplePdf = {
   filename: workshop.filename,
