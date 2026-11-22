@@ -85,7 +85,7 @@ export function WorkspacePage() {
       onSignOut={async () => {
         await api("/session", workspace.token, "DELETE");
         setWorkspace(null);
-        await signOut({ redirectUrl: "/" });
+        await signOut({ redirectUrl: "/sign-in" });
       }}
     />
   );

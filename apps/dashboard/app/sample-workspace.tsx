@@ -10,7 +10,7 @@ export function SampleWorkspace() {
     <Chat
       data={data}
       sampleMode
-      onSignOut={() => signOut({ redirectUrl: "/" })}
+      onSignOut={() => signOut({ redirectUrl: "/sign-in" })}
       onPreference={async (timeFormat) => {
         setData((current) => ({
           ...current,

@@ -36,8 +36,9 @@ try {
     await route.fulfill({ response: a });
   });
   await page.goto(origin);
-  await signInTestAccount(page, email);
   await page.getByRole("link", { name: "Open sample workspace" }).click();
+  await page.waitForURL((url) => url.pathname === "/sign-in");
+  await signInTestAccount(page, email);
   await expect(page.getByRole("heading", { name: "Main chat" })).toBeVisible({
     timeout: 300000,
   });

@@ -28,6 +28,8 @@ try {
     }
   });
   await page.goto(origin);
+  const open = page.getByRole("link", { name: "Open sample workspace" });
+  await open.click();
   const signInHeading = page.getByRole("heading", { name: "Sign in to Cueia" });
   const navigation = page.getByRole("navigation", { name: "Workspace" });
   await page.waitForURL(
@@ -48,16 +50,13 @@ try {
   await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(signInHeading).toBeVisible();
-  if (email) {
-    await signInTestAccount(page, email);
-  } else console.log("Complete sign-in in the Chromium window.");
-  const open = page.getByRole("link", { name: "Open sample workspace" });
-  await expect(open).toBeVisible({ timeout: 300000 });
   const snapshot = page.waitForResponse(
     (r) => r.url() === origin + "/api/workspace" && r.ok(),
     { timeout: 300000 },
   );
-  await open.click();
+  if (email) {
+    await signInTestAccount(page, email);
+  } else console.log("Complete sign-in in the Chromium window.");
   const { id } = await (await snapshot).json();
   const workspaceHash = createHash("sha256")
     .update(JSON.stringify({ Deployment: deployment, Workspace: id }))

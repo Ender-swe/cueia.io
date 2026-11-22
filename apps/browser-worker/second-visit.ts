@@ -18,12 +18,13 @@ const browser = await chromium.launch();
 try {
   const page = await browser.newPage();
   await page.goto(origin);
-  await signInTestAccount(page, email);
+  await page.getByRole("link", { name: "Open sample workspace" }).click();
+  await page.waitForURL((url) => url.pathname === "/sign-in");
   const exchange = page.waitForResponse(
     (r) => r.url() === origin + "/api/session" && r.ok(),
     { timeout: 300000 },
   );
-  await page.getByRole("link", { name: "Open sample workspace" }).click();
+  await signInTestAccount(page, email);
   const { token } = await (await exchange).json();
   await expect(page.getByRole("heading", { name: "Main chat" })).toBeVisible();
   const request = (bearer: string, path: string, method = "GET") =>

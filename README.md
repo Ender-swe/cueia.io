@@ -74,7 +74,7 @@ Build the guest command from `apps/server/` with `CGO_ENABLED=0 go build -o cuei
 
 ### Dashboard sign-in
 
-The sample dashboard at `/` and the private workspace at `/workspace` require a Clerk session. Signed-out visitors are taken to `/sign-in` and can switch to `/sign-up` to create an account. After authentication, Clerk returns them to the workspace they opened. Direct visits to either form lead to the sample dashboard after authentication. Configure static hosting to serve the dashboard entry point for both auth routes and their nested paths so verification, password recovery, and OAuth callbacks work on refresh.
+Signed-out visitors can choose “Open sample workspace” at `/` to sign in or create an account and continue directly to their private workspace at `/workspace`. Opening `/workspace` directly also preserves the destination through sign-in and sign-up. Direct visits to either form lead to the sample dashboard after authentication. Configure static hosting to serve the dashboard entry point for both auth routes and their nested paths so verification, password recovery, and OAuth callbacks work on refresh.
 
 Supply the publishable key for the deployment’s Clerk instance when building the dashboard. Configure the API's `CLERK_ISSUER` for the same instance and `CLERK_AUTHORIZED_PARTY` for the dashboard origin. For local sample development, use `http://127.0.0.1:5173` as the dashboard origin. Set signup to public, enable email addresses as a sign-in identifier, and enable password authentication. Enable Google and GitHub as social sign-in options. Use the live deployment's own instance settings and dashboard origin when deploying live.
 

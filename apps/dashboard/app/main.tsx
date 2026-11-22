@@ -8,11 +8,13 @@ import {
 import { Provider } from "@react-spectrum/s2/Provider";
 import {
   BrowserRouter,
+  Link,
   Navigate,
   Outlet,
   Route,
   Routes,
   useHref,
+  useMatch,
   useNavigate,
 } from "react-router";
 import { AuthPage, authLocalization } from "./pages/auth";
@@ -22,6 +24,7 @@ import "@fontsource-variable/dm-sans";
 import "./global.css";
 
 function RequireSignIn() {
+  const atLaunch = useMatch("/");
   const { isLoaded, isSignedIn, sessionId } = useAuth();
   if (!isLoaded)
     return (
@@ -37,6 +40,14 @@ function RequireSignIn() {
       </main>
     );
   if (!isSignedIn || !sessionId) {
+    if (atLaunch)
+      return (
+        <main className="min-h-dvh grid place-content-center bg-canvas p-6 font-sans text-interface">
+          <Link className="text-apricot" to="/workspace">
+            Open sample workspace
+          </Link>
+        </main>
+      );
     const search = new URLSearchParams({
       redirect_url: window.location.href,
     }).toString();
