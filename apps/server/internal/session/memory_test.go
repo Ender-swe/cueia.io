@@ -28,7 +28,12 @@ func TestFirstExchangesRecover(t *testing.T) {
 	sub := "first-" + uuid.NewString()
 	f.AfterAllocate = func(provider.Machine) error { return errors.New("lost response") }
 	issuer := sessiontest.NewIssuer(t)
-	sessions := NewService(t.Context(), s.DB, Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, s.Provision)
+	t.Setenv("CLERK_ISSUER", issuer.URL)
+	t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
+	sessions, err := NewService(t.Context(), s.DB, s.Provision)
+	if err != nil {
+		t.Fatal(err)
+	}
 	token := issuer.Token(t, sub)
 	if _, err := sessions.Exchange(ctx, token); err == nil {
 		t.Fatal("expected interruption")
@@ -40,7 +45,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 	}
 	// Fail the final seed insert once, after disk publication and before commit.
 	schema := "fault_" + strings.ReplaceAll(uuid.NewString(), "-", "")
-	_, err := s.DB.Exec(ctx, fmt.Sprintf(`CREATE FUNCTION %s() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.workspace_id='%s'::uuid THEN RAISE EXCEPTION 'fixture interruption'; END IF; RETURN NEW; END $$;
+	_, err = s.DB.Exec(ctx, fmt.Sprintf(`CREATE FUNCTION %s() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.workspace_id='%s'::uuid THEN RAISE EXCEPTION 'fixture interruption'; END IF; RETURN NEW; END $$;
  CREATE TRIGGER %s BEFORE INSERT ON workspace_preferences FOR EACH ROW EXECUTE FUNCTION %s()`, schema, pending, schema, schema))
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +96,12 @@ func TestStoredSessions(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			store := testWorkspace(t, mode)
 			issuer := sessiontest.NewIssuer(t)
-			s := NewService(t.Context(), store.DB, Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
+			t.Setenv("CLERK_ISSUER", issuer.URL)
+			t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
+			s, err := NewService(t.Context(), store.DB, store.Provision)
+			if err != nil {
+				t.Fatal(err)
+			}
 			ctx := t.Context()
 			login := func(sub string) Credential {
 				t.Helper()

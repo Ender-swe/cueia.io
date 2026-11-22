@@ -18,14 +18,15 @@ func TestOriginAndRateLimit(t *testing.T) {
 	l.Limit = 2
 	l.Now = func() time.Time { return now }
 	calls := 0
-	h := Protect(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	service := &Service{authorizedParty: sessiontest.Origin}
+	h := service.Protect(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
 		if r.Header.Get("Authorization") == "Bearer valid" {
 			w.WriteHeader(200)
 			return
 		}
 		reject(w, 401, "unauthorized")
-	}), "https://dashboard.example", l)
+	}), l)
 	try := func(peer, origin, auth string, want int) {
 		t.Helper()
 		r := httptest.NewRequest("POST", "/api/session", nil)
@@ -54,7 +55,12 @@ func TestOriginAndRateLimit(t *testing.T) {
 func TestSessionRoutes(t *testing.T) {
 	store := testWorkspace(t, "sample")
 	issuer := sessiontest.NewIssuer(t)
-	service := NewService(t.Context(), store.DB, Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
+	t.Setenv("CLERK_ISSUER", issuer.URL)
+	t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
+	service, err := NewService(t.Context(), store.DB, store.Provision)
+	if err != nil {
+		t.Fatal(err)
+	}
 	mux := http.NewServeMux()
 	NewHandler(service).Register(mux)
 	call := func(method, token string, status int) *httptest.ResponseRecorder {

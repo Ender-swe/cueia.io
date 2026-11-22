@@ -31,7 +31,12 @@ func TestBrowserJourney(t *testing.T) {
 	}
 	server := httptest.NewUnstartedServer(nil)
 	origin := "http://" + server.Listener.Addr().String()
-	s := session.NewService(t.Context(), store.DB, session.Config{ClerkIssuer: issuer, AuthorizedParty: origin}, store.Provision)
+	t.Setenv("CLERK_ISSUER", issuer)
+	t.Setenv("CLERK_AUTHORIZED_PARTY", origin)
+	s, err := session.NewService(t.Context(), store.DB, store.Provision)
+	if err != nil {
+		t.Fatal(err)
+	}
 	mux := routes(s.Authenticate, nil)
 	workspaceRoutes(mux, s, store)
 	signer, err := document.Load(t.Context(), store.DB)
@@ -40,7 +45,7 @@ func TestBrowserJourney(t *testing.T) {
 	}
 	previewRoutes(mux, s, store, signer)
 	root := http.NewServeMux()
-	root.Handle("/api/", session.Protect(mux, origin, middleware.NewLimiter()))
+	root.Handle("/api/", s.Protect(mux, middleware.NewLimiter()))
 	for _, path := range []string{"/workspace", "/sign-in", "/sign-in/", "/sign-up", "/sign-up/"} {
 		root.HandleFunc("GET "+path, func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, filepath.Join(dist, "index.html")) })
 	}

@@ -29,16 +29,16 @@ func (w *failureWriter) Write(data []byte) (int, error) {
 	return w.ResponseWriter.Write(data)
 }
 
-func Protect(next http.Handler, origin string, limiter *middleware.Limiter) http.Handler {
+func (s *Service) Protect(next http.Handler, limiter *middleware.Limiter) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
 		origins := r.Header.Values("Origin")
 		if len(origins) > 0 {
-			if len(origins) != 1 || origins[0] != origin {
+			if len(origins) != 1 || origins[0] != s.authorizedParty {
 				reject(w, 403, "forbidden")
 				return
 			}
-			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Origin", s.authorizedParty)
 			if r.Method == http.MethodOptions {
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")

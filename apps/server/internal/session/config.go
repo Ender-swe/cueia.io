@@ -10,14 +10,14 @@ const (
 	sessionLifetime = "12 hours"
 )
 
-type Config struct {
+type config struct {
 	ClerkIssuer     string
 	AuthorizedParty string
 }
 
-// LoadConfig returns the session settings and the names of any missing variables.
-func LoadConfig() (Config, []string) {
-	c := Config{
+// loadConfig returns the session settings and the names of any missing variables.
+func loadConfig() (config, []string) {
+	c := config{
 		ClerkIssuer:     os.Getenv("CLERK_ISSUER"),
 		AuthorizedParty: os.Getenv("CLERK_AUTHORIZED_PARTY"),
 	}

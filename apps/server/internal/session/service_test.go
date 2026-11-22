@@ -9,7 +9,12 @@ import (
 func TestClerkServiceVerify(t *testing.T) {
 	issuer := sessiontest.NewIssuer(t)
 	const origin = sessiontest.Origin
-	service := NewService(t.Context(), nil, Config{ClerkIssuer: issuer.URL + "/", AuthorizedParty: origin}, nil)
+	t.Setenv("CLERK_ISSUER", issuer.URL+"/")
+	t.Setenv("CLERK_AUTHORIZED_PARTY", origin)
+	service, err := NewService(t.Context(), nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, token := range []string{"", "invalid"} {
 		if sub, err := service.Verify(t.Context(), token); sub != "" || !errors.Is(err, ErrUnauthorized) {
 			t.Errorf("Verify(%q) = (%q, %v), want empty subject and ErrUnauthorized", token, sub, err)

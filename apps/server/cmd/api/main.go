@@ -21,16 +21,17 @@ import (
 )
 
 func run(ctx context.Context) error {
-	settings, err := config.LoadAPI()
-	if err != nil {
-		return err
-	}
+	settings, configErr := config.LoadAPI()
 	db, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return errors.New("invalid database configuration")
 	}
 	defer db.Close()
 	store := &workspace.Service{DB: db, Deployment: os.Getenv("CUEIA_DEPLOYMENT_ID"), Mode: settings.Mode}
+	sessions, sessionErr := session.NewService(ctx, db, store.Provision)
+	if err := errors.Join(configErr, sessionErr); err != nil {
+		return err
+	}
 	if dir := os.Getenv("CUEIA_TEST_VOLUME_ROOT"); dir != "" && settings.Mode == "sample" {
 		store.Provider = &providertest.Fixture{Directory: dir}
 		store.ProviderName, store.Region = "internal", "local"
@@ -41,7 +42,6 @@ func run(ctx context.Context) error {
 		}
 		store.Provider, store.ProviderName, store.Region = machines, "azure", os.Getenv("AZURE_LOCATION")
 	}
-	sessions := session.NewService(ctx, db, settings.Session, store.Provision)
 	mux := routes(sessions.Authenticate, nil)
 	workspaceRoutes(mux, sessions, store)
 	signer, err := document.Load(ctx, db)
@@ -56,7 +56,7 @@ func run(ctx context.Context) error {
 		signer.Now = func() time.Time { return time.Now().Add(advance) }
 	}
 	previewRoutes(mux, sessions, store, signer)
-	server := &http.Server{Addr: settings.Addr, Handler: session.Protect(mux, settings.Session.AuthorizedParty, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: settings.Addr, Handler: sessions.Protect(mux, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
 	done := make(chan error, 1)
 	go func() { done <- server.ListenAndServe() }()
 	select {

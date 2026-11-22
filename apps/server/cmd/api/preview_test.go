@@ -20,7 +20,12 @@ import (
 func TestPreviewAcrossServers(t *testing.T) {
 	store := testWorkspace(t, "sample")
 	issuer := sessiontest.NewIssuer(t)
-	s := session.NewService(t.Context(), store.DB, session.Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
+	t.Setenv("CLERK_ISSUER", issuer.URL)
+	t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
+	s, err := session.NewService(t.Context(), store.DB, store.Provision)
+	if err != nil {
+		t.Fatal(err)
+	}
 	var servers [2]*httptest.Server
 	var errs [2]error
 	start := make(chan struct{})

@@ -42,7 +42,12 @@ func login(t *testing.T, handler http.Handler, clerkToken string) session.Creden
 func TestWorkspaceHTTP(t *testing.T) {
 	store := testWorkspace(t, "sample")
 	issuer := sessiontest.NewIssuer(t)
-	s := session.NewService(t.Context(), store.DB, session.Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
+	t.Setenv("CLERK_ISSUER", issuer.URL)
+	t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
+	s, err := session.NewService(t.Context(), store.DB, store.Provision)
+	if err != nil {
+		t.Fatal(err)
+	}
 	mux := routes(s.Authenticate, nil)
 	workspaceRoutes(mux, s, store)
 	alice := uuid.NewString()
