@@ -40,7 +40,7 @@ func TestBrowserJourney(t *testing.T) {
 	}
 	previewRoutes(mux, s, store, signer)
 	root := http.NewServeMux()
-	root.Handle("/api/", middleware.Protect(mux, origin, middleware.NewLimiter()))
+	root.Handle("/api/", session.Protect(mux, origin, middleware.NewLimiter()))
 	for _, path := range []string{"/workspace", "/sign-in", "/sign-in/", "/sign-up", "/sign-up/"} {
 		root.HandleFunc("GET "+path, func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, filepath.Join(dist, "index.html")) })
 	}

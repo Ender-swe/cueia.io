@@ -1,8 +1,6 @@
 package session
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 )
@@ -18,20 +16,4 @@ func Bearer(r *http.Request) string {
 		return ""
 	}
 	return fields[1]
-}
-
-func (s *Service) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Content-Type", "application/json")
-	credential, err := s.Exchange(r.Context(), Bearer(r))
-	if err != nil {
-		status, code := http.StatusServiceUnavailable, "unavailable"
-		if errors.Is(err, ErrUnauthorized) {
-			status, code = http.StatusUnauthorized, "unauthorized"
-		}
-		w.WriteHeader(status)
-		_ = json.NewEncoder(w).Encode(map[string]string{"code": code, "message": http.StatusText(status)})
-		return
-	}
-	_ = json.NewEncoder(w).Encode(credential)
 }

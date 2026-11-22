@@ -56,7 +56,7 @@ func run(ctx context.Context) error {
 		signer.Now = func() time.Time { return time.Now().Add(advance) }
 	}
 	previewRoutes(mux, sessions, store, signer)
-	server := &http.Server{Addr: settings.Addr, Handler: middleware.Protect(mux, settings.AuthorizedParty, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: settings.Addr, Handler: session.Protect(mux, settings.AuthorizedParty, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
 	done := make(chan error, 1)
 	go func() { done <- server.ListenAndServe() }()
 	select {

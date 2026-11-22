@@ -48,7 +48,7 @@ func (l *Limiter) Allow(peer string) bool {
 	return true
 }
 
-func (l *Limiter) exhausted(peer string) bool {
+func (l *Limiter) Exhausted(peer string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	w := l.peers[peer]

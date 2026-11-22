@@ -39,17 +39,12 @@ func content(w http.ResponseWriter, kind string, data []byte, err error) {
 }
 
 func workspaceRoutes(mux *http.ServeMux, sessions *session.Service, store *workspace.Service) {
-	private := func(pattern string, handler ownerHandler) {
-		mux.HandleFunc(pattern, requireSession(sessions.Authenticate, handler))
+	private := func(pattern string, handler session.OwnerHandler) {
+		mux.HandleFunc(pattern, session.Require(sessions.Authenticate, handler))
 	}
-	mux.HandleFunc("POST /api/session", sessions.ExchangeHTTP)
-	private("DELETE /api/session", func(w http.ResponseWriter, r *http.Request, _ string) {
-		if err := sessions.Revoke(r.Context(), session.Bearer(r)); err != nil {
-			respondError(w, err)
-			return
-		}
-		w.WriteHeader(204)
-	})
+	handler := session.NewHandler(sessions)
+	mux.HandleFunc("POST /api/session", handler.ExchangeHTTP)
+	private("DELETE /api/session", handler.RevokeHTTP)
 	private("GET /api/workspace", func(w http.ResponseWriter, r *http.Request, owner string) {
 		v, err := store.Snapshot(r.Context(), owner)
 		result(w, v, err)

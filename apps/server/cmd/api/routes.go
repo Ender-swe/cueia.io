@@ -28,7 +28,7 @@ func routes(authenticate func(context.Context, string) (string, error), provider
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
-	mux.HandleFunc("GET /api/providers", requireSession(authenticate, func(w http.ResponseWriter, r *http.Request, _ string) {
+	mux.HandleFunc("GET /api/providers", session.Require(authenticate, func(w http.ResponseWriter, r *http.Request, _ string) {
 		statuses := make([]providerStatus, 0, len(providers))
 		for _, p := range providers {
 			status := "disabled"
@@ -46,29 +46,6 @@ func routes(authenticate func(context.Context, string) (string, error), provider
 		writeJSON(w, http.StatusOK, statuses)
 	}))
 	return mux
-}
-
-type ownerHandler func(http.ResponseWriter, *http.Request, string)
-
-func requireSession(authenticate func(context.Context, string) (string, error), next ownerHandler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-store")
-		token := session.Bearer(r)
-		if token == "" {
-			writeError(w, 401, "unauthorized")
-			return
-		}
-		owner, err := authenticate(r.Context(), token)
-		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, session.ErrUnauthorized) {
-			writeError(w, 401, "unauthorized")
-			return
-		}
-		if err != nil {
-			writeError(w, 503, "unavailable")
-			return
-		}
-		next(w, r, owner)
-	}
 }
 
 func respondError(w http.ResponseWriter, err error) {

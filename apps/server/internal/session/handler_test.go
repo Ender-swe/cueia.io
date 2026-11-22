@@ -1,15 +1,17 @@
-package middleware
+package session
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 )
 
 func TestOriginAndRateLimit(t *testing.T) {
 	now := time.Now()
-	l := NewLimiter()
+	l := middleware.NewLimiter()
 	l.Limit = 2
 	l.Now = func() time.Time { return now }
 	calls := 0

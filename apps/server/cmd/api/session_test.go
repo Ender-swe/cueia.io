@@ -91,7 +91,7 @@ func TestSessionExchange(t *testing.T) {
 			store := testWorkspace(t, mode)
 			s := session.NewService(store.DB, session.Clerk(t.Context(), "https://issuer.invalid", "https://cueia.invalid"), store.Provision)
 			mux := http.NewServeMux()
-			mux.HandleFunc("POST /api/session", s.ExchangeHTTP)
+			mux.HandleFunc("POST /api/session", session.NewHandler(s).ExchangeHTTP)
 			for _, token := range []string{"", "malformed"} {
 				if request(mux, "POST", "/api/session", token, "").Code != 401 {
 					t.Fatal("invalid credential accepted")
@@ -99,7 +99,7 @@ func TestSessionExchange(t *testing.T) {
 			}
 			sub := uuid.NewString()
 			s = session.NewService(store.DB, func(context.Context, string) (string, error) { return sub, nil }, store.Provision)
-			handler := http.HandlerFunc(s.ExchangeHTTP)
+			handler := http.HandlerFunc(session.NewHandler(s).ExchangeHTTP)
 			a, b := login(t, handler, "fixture"), login(t, handler, "fixture")
 			if a.Token == b.Token {
 				t.Fatal("repeated session credential")
