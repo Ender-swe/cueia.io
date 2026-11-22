@@ -7,12 +7,25 @@ import (
 )
 
 type API struct {
-	Mode string
-	Addr string
+	Mode                   string
+	Addr                   string
+	DatabaseURL            string
+	Deployment             string
+	TestVolumeRoot         string
+	AzureLocation          string
+	TestPreviewClockOffset string
 }
 
 func LoadAPI() (API, error) {
-	c := API{Mode: os.Getenv("CUEIA_MODE"), Addr: os.Getenv("CUEIA_LISTEN_ADDR")}
+	c := API{
+		Mode:                   os.Getenv("CUEIA_MODE"),
+		Addr:                   os.Getenv("CUEIA_LISTEN_ADDR"),
+		DatabaseURL:            os.Getenv("DATABASE_URL"),
+		Deployment:             os.Getenv("CUEIA_DEPLOYMENT_ID"),
+		TestVolumeRoot:         os.Getenv("CUEIA_TEST_VOLUME_ROOT"),
+		AzureLocation:          os.Getenv("AZURE_LOCATION"),
+		TestPreviewClockOffset: os.Getenv("CUEIA_TEST_PREVIEW_CLOCK_OFFSET"),
+	}
 	if c.Mode == "" {
 		c.Mode = "sample"
 	}
