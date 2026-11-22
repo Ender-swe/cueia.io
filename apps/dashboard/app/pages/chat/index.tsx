@@ -6,10 +6,10 @@ import { ChatComposer, type Draft } from "./components/chat-composer";
 import { ContextPane } from "./components/context-pane";
 import { ConversationFeed } from "./components/conversation-feed";
 import { PreferencesDialog } from "./components/preferences-dialog";
-import { SampleFiles } from "../../workspace-panels";
+import { SampleFiles } from "../../components/sample-files";
 import { Files } from "../files";
-import { compactWorkspace, ResizableSidebar } from "../../resizable-sidebar";
-import { TaskDetails } from "../../task-details";
+import { compactWorkspace, ResizableSidebar } from "../../components/resizable-sidebar";
+import { TaskDetails } from "../../components/task-details";
 import type { Schema } from "../../api";
 
 type Props = {

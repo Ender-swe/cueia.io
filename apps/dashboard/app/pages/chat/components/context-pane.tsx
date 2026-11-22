@@ -5,8 +5,9 @@ import { Link } from "react-router";
 import Add from "@react-spectrum/s2/icons/Add";
 import ChatIcon from "@react-spectrum/s2/icons/Chat";
 import Lock from "@react-spectrum/s2/icons/Lock";
-import { ResizableSidebar } from "../../../resizable-sidebar";
-import { FindPanel, SearchBox } from "../../../workspace-panels";
+import { ResizableSidebar } from "../../../components/resizable-sidebar";
+import { FindPanel } from "../../../components/find-panel";
+import { SearchBox } from "../../../components/search-box";
 import type { Schema } from "../../../api";
 type LeftView = Exclude<WorkspaceView, "tasks">;
 const panelNames = {

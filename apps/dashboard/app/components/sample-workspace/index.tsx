@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useClerk } from "@clerk/react";
-import { Chat } from "./pages/chat";
-import { sample } from "./sample-content";
+import { Chat } from "../../pages/chat";
+import { sample } from "../../sample-content";
 
 export function SampleWorkspace() {
   const [data, setData] = useState(sample);

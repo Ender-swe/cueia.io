@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AttachmentPreview } from "@cueia/components";
-import { SearchBox } from "../../workspace-panels";
+import { SearchBox } from "../../components/search-box";
 import { api, type Schema } from "../../api";
 import { DirectoryToolbar } from "./components/directory-toolbar";
 import { FileResults } from "./components/file-results";

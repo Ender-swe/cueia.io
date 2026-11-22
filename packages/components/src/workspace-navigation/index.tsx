@@ -5,8 +5,7 @@ import Lightbulb from "@react-spectrum/s2/icons/Lightbulb";
 import Tasks from "@react-spectrum/s2/icons/CheckBox";
 import Menu from "@react-spectrum/s2/icons/MenuHamburger";
 import { Button } from "@cueia/ui/button";
-import { motion, useReducedMotion } from "motion/react";
-import type { ReactNode } from "react";
+import { CueiaMark } from "../cueia-mark";
 
 export type WorkspaceView = "chat" | "find" | "files" | "ideas" | "tasks";
 
@@ -23,22 +22,6 @@ interface NavigationProps {
   onSelect: (view: WorkspaceView) => void;
   menuOpen: boolean;
   onMenu: () => void;
-}
-
-const brandRing =
-  "[grid-area:1/1] rounded-[50%] border-[0.0625em] border-solid border-current border-r-transparent rotate-[-18deg]";
-
-export function CueiaMark({ className }: { className?: string } = {}) {
-  return (
-    <span
-      className={`grid flex-none place-items-center text-apricot ${className ?? "size-[33px] text-[32px] compact:size-7"}`}
-      aria-hidden="true"
-    >
-      <i className={`${brandRing} size-[1em]`} />
-      <i className={`${brandRing} size-[0.71875em]`} />
-      <i className={`${brandRing} size-[0.4375em]`} />
-    </span>
-  );
 }
 
 const navigationButton =
@@ -86,25 +69,5 @@ export function WorkspaceNavigation({
         <span>Menu</span>
       </Button>
     </nav>
-  );
-}
-
-export function PanelContent({
-  children,
-  visible = true,
-}: {
-  children: ReactNode;
-  visible?: boolean;
-}) {
-  const reduced = useReducedMotion();
-  return (
-    <motion.div
-      initial={false}
-      animate={{ opacity: visible ? 1 : 0 }}
-      transition={{ duration: reduced ? 0 : 0.14 }}
-      className="flex flex-col gap-2 py-4.5 px-3.5 wrap-anywhere"
-    >
-      {children}
-    </motion.div>
   );
 }
