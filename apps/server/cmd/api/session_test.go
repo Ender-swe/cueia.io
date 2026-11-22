@@ -89,7 +89,7 @@ func TestSessionExchange(t *testing.T) {
 	for _, mode := range []string{"sample", "live"} {
 		t.Run(mode, func(t *testing.T) {
 			store := testWorkspace(t, mode)
-			s := session.Service{DB: store.DB, Verify: session.Clerk(t.Context(), "https://issuer.invalid", "https://cueia.invalid"), Provision: store.Provision}
+			s := session.NewService(store.DB, session.Clerk(t.Context(), "https://issuer.invalid", "https://cueia.invalid"), store.Provision)
 			mux := http.NewServeMux()
 			mux.HandleFunc("POST /api/session", s.ExchangeHTTP)
 			for _, token := range []string{"", "malformed"} {
@@ -98,7 +98,7 @@ func TestSessionExchange(t *testing.T) {
 				}
 			}
 			sub := uuid.NewString()
-			s.Verify = func(context.Context, string) (string, error) { return sub, nil }
+			s = session.NewService(store.DB, func(context.Context, string) (string, error) { return sub, nil }, store.Provision)
 			handler := http.HandlerFunc(s.ExchangeHTTP)
 			a, b := login(t, handler, "fixture"), login(t, handler, "fixture")
 			if a.Token == b.Token {
@@ -120,7 +120,7 @@ func TestSessionExchange(t *testing.T) {
 
 func TestWorkspaceHTTP(t *testing.T) {
 	store := testWorkspace(t, "sample")
-	s := session.Service{DB: store.DB, Verify: func(_ context.Context, subject string) (string, error) { return subject, nil }, Provision: store.Provision}
+	s := session.NewService(store.DB, func(_ context.Context, subject string) (string, error) { return subject, nil }, store.Provision)
 	mux := routes(s.Authenticate, nil)
 	workspaceRoutes(mux, s, store)
 	alice := uuid.NewString()
@@ -199,7 +199,7 @@ func TestWorkspaceHTTP(t *testing.T) {
 
 func TestPreviewAcrossServers(t *testing.T) {
 	store := testWorkspace(t, "sample")
-	s := session.Service{DB: store.DB, Verify: func(_ context.Context, sub string) (string, error) { return sub, nil }, Provision: store.Provision}
+	s := session.NewService(store.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, store.Provision)
 	var servers [2]*httptest.Server
 	var errs [2]error
 	start := make(chan struct{})

@@ -20,7 +20,7 @@ func Bearer(r *http.Request) string {
 	return fields[1]
 }
 
-func (s Service) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json")
 	credential, err := s.Exchange(r.Context(), Bearer(r))

@@ -38,7 +38,7 @@ func content(w http.ResponseWriter, kind string, data []byte, err error) {
 	_, _ = w.Write(data)
 }
 
-func workspaceRoutes(mux *http.ServeMux, sessions session.Service, store *workspace.Service) {
+func workspaceRoutes(mux *http.ServeMux, sessions *session.Service, store *workspace.Service) {
 	private := func(pattern string, handler ownerHandler) {
 		mux.HandleFunc(pattern, requireSession(sessions.Authenticate, handler))
 	}

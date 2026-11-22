@@ -6,17 +6,34 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
 	"time"
+
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type Service struct {
+	db        *pgxpool.Pool
+	verify    VerifyFunc
+	provision func(context.Context, string) (string, error)
+}
+
+type Credential struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
 
 var ErrUnauthorized = errors.New("unauthorized")
 
-type Verify func(context.Context, string) (string, error)
+// VerifyFunc returns the Clerk subject for a verified session token.
+type VerifyFunc func(ctx context.Context, rawToken string) (subject string, err error)
 
-func Clerk(ctx context.Context, issuer, party string) Verify {
+func NewService(db *pgxpool.Pool, verify VerifyFunc, provision func(context.Context, string) (string, error)) *Service {
+	return &Service{db: db, verify: verify, provision: provision}
+}
+
+func Clerk(ctx context.Context, issuer, party string) VerifyFunc {
 	issuer = strings.TrimSuffix(issuer, "/")
 	keys := oidc.NewRemoteKeySet(ctx, issuer+"/.well-known/jwks.json")
 	verifier := oidc.NewVerifier(issuer, keys, &oidc.Config{SkipClientIDCheck: true, SupportedSigningAlgs: []string{"RS256"}})
@@ -36,25 +53,24 @@ func Clerk(ctx context.Context, issuer, party string) Verify {
 	}
 }
 
-type Service struct {
-	DB        *pgxpool.Pool
-	Verify    Verify
-	Provision func(context.Context, string) (string, error)
-}
-type Credential struct {
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expiresAt"`
+// Verify checks the Clerk token and returns its subject.
+func (s *Service) Verify(ctx context.Context, clerkToken string) (string, error) {
+	if clerkToken == "" {
+		return "", ErrUnauthorized
+	}
+	sub, err := s.verify(ctx, clerkToken)
+	if err != nil {
+		return "", ErrUnauthorized
+	}
+	return sub, nil
 }
 
-func (s Service) Exchange(ctx context.Context, clerkToken string) (Credential, error) {
-	if clerkToken == "" {
-		return Credential{}, ErrUnauthorized
-	}
+func (s *Service) Exchange(ctx context.Context, clerkToken string) (Credential, error) {
 	sub, err := s.Verify(ctx, clerkToken)
 	if err != nil {
-		return Credential{}, ErrUnauthorized
+		return Credential{}, err
 	}
-	w, err := s.Provision(ctx, sub)
+	w, err := s.provision(ctx, sub)
 	if err != nil {
 		return Credential{}, err
 	}
@@ -63,24 +79,27 @@ func (s Service) Exchange(ctx context.Context, clerkToken string) (Credential, e
 	token := base64.RawURLEncoding.EncodeToString(secret[:])
 	hash := sha256.Sum256([]byte(token))
 	var expires time.Time
-	err = s.DB.QueryRow(ctx, `INSERT INTO sessions(token_digest,user_id,expires_at)
+	err = s.db.QueryRow(ctx, `INSERT INTO sessions(token_digest,user_id,expires_at)
  SELECT $1,id,now()+interval '12 hours' FROM users WHERE clerk_user_id=$2 AND workspace_id=$3 RETURNING expires_at`, hash[:], sub, w).Scan(&expires)
 	if err != nil {
 		return Credential{}, err
 	}
 	return Credential{token, expires}, nil
 }
-func (s Service) Authenticate(ctx context.Context, token string) (string, error) {
+
+func (s *Service) Authenticate(ctx context.Context, token string) (string, error) {
 	if token == "" {
 		return "", ErrUnauthorized
 	}
 	hash := sha256.Sum256([]byte(token))
 	var w string
-	err := s.DB.QueryRow(ctx, `SELECT u.workspace_id FROM sessions s JOIN users u ON u.id=s.user_id WHERE token_digest=$1 AND revoked_at IS NULL AND expires_at>now()`, hash[:]).Scan(&w)
+	err := s.db.QueryRow(ctx, `SELECT u.workspace_id FROM sessions s JOIN users u ON u.id=s.user_id WHERE token_digest=$1 AND revoked_at IS NULL AND expires_at>now()`, hash[:]).Scan(&w)
 	return w, err
 }
-func (s Service) Revoke(ctx context.Context, token string) error {
+
+func (s *Service) Revoke(ctx context.Context, token string) error {
 	hash := sha256.Sum256([]byte(token))
-	_, err := s.DB.Exec(ctx, "UPDATE sessions SET revoked_at=now() WHERE token_digest=$1 AND revoked_at IS NULL", hash[:])
+	_, err := s.db.Exec(ctx, "UPDATE sessions SET revoked_at=now() WHERE token_digest=$1 AND revoked_at IS NULL", hash[:])
 	return err
 }
+

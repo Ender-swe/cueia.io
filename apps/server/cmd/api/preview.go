@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func previewRoutes(mux *http.ServeMux, s session.Service, store *workspace.Service, signer document.Signer) {
+func previewRoutes(mux *http.ServeMux, s *session.Service, store *workspace.Service, signer document.Signer) {
 	mux.HandleFunc("POST /api/documents/{fileId}/preview-links", requireSession(s.Authenticate, func(w http.ResponseWriter, r *http.Request, owner string) {
 		id := r.PathValue("fileId")
 		if uuid.Validate(id) != nil {

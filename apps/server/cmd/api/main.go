@@ -41,7 +41,7 @@ func run(ctx context.Context) error {
 		}
 		store.Provider, store.ProviderName, store.Region = machines, "azure", os.Getenv("AZURE_LOCATION")
 	}
-	sessions := session.Service{DB: db, Verify: session.Clerk(ctx, settings.ClerkIssuer, settings.AuthorizedParty), Provision: store.Provision}
+	sessions := session.NewService(db, session.Clerk(ctx, settings.ClerkIssuer, settings.AuthorizedParty), store.Provision)
 	mux := routes(sessions.Authenticate, nil)
 	workspaceRoutes(mux, sessions, store)
 	signer, err := document.Load(ctx, db)

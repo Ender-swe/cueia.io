@@ -31,7 +31,7 @@ func TestBrowserJourney(t *testing.T) {
 	}
 	server := httptest.NewUnstartedServer(nil)
 	origin := "http://" + server.Listener.Addr().String()
-	s := session.Service{DB: store.DB, Verify: session.Clerk(t.Context(), issuer, origin), Provision: store.Provision}
+	s := session.NewService(store.DB, session.Clerk(t.Context(), issuer, origin), store.Provision)
 	mux := routes(s.Authenticate, nil)
 	workspaceRoutes(mux, s, store)
 	signer, err := document.Load(t.Context(), store.DB)

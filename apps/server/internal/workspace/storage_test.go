@@ -234,7 +234,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 	sub := "first-" + uuid.NewString()
 	f.AfterAllocate = func(provider.Machine) error { return errors.New("lost response") }
 	verify := func(_ context.Context, token string) (string, error) { return token, nil }
-	sessions := session.Service{DB: s.DB, Provision: s.Provision, Verify: verify}
+	sessions := session.NewService(s.DB, verify, s.Provision)
 	if _, err := sessions.Exchange(ctx, sub); err == nil {
 		t.Fatal("expected interruption")
 	}
@@ -332,7 +332,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 func TestOwnerCollectionsAndSessions(t *testing.T) {
 	s := testService(t)
 	ctx := t.Context()
-	sessions := session.Service{DB: s.DB, Verify: func(_ context.Context, sub string) (string, error) { return sub, nil }, Provision: s.Provision}
+	sessions := session.NewService(s.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, s.Provision)
 	sub := uuid.NewString()
 	login := func(sub string) session.Credential {
 		t.Helper()
