@@ -1,4 +1,4 @@
-package workspace_test
+package routes
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 func TestWorkspaceRoutesRequireSession(t *testing.T) {
 	mux := http.NewServeMux()
-	workspace.NewHandler(nil, func(context.Context, string) (string, error) { return "", session.ErrUnauthorized }).Register(mux)
+	registerWorkspace(mux, func(context.Context, string) (string, error) { return "", session.ErrUnauthorized }, workspace.NewHandler(nil))
 	for _, route := range []struct{ method, path string }{
 		{"GET", "/api/workspace"}, {"GET", "/api/mail/threads"}, {"GET", "/api/calendar/events"},
 		{"PATCH", "/api/workspace/preferences"}, {"GET", "/api/files"}, {"GET", "/api/files/search"}, {"GET", "/api/files/content"},

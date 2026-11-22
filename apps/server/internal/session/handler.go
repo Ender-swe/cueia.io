@@ -20,11 +20,6 @@ func NewHandler(sessions *Service) *Handler {
 	return &Handler{sessions: sessions}
 }
 
-func (h *Handler) Register(mux *http.ServeMux) {
-	mux.HandleFunc(exchangeRoute, h.ExchangeHTTP)
-	mux.HandleFunc(revokeRoute, Require(h.sessions.Authenticate, h.RevokeHTTP))
-}
-
 func (h *Handler) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json")
@@ -91,6 +86,6 @@ func bearerToken(r *http.Request) string {
 	return fields[1]
 }
 
-func (s *Service) Protect(next http.Handler, limiter *middleware.Limiter) http.Handler {
+func (s *Service) Protect(next http.Handler, limiter *middleware.Limiter, sessionPath string) http.Handler {
 	return middleware.Protect(next, limiter, s.authorizedParty, sessionPath)
 }

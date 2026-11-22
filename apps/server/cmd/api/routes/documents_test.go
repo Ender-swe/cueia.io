@@ -1,7 +1,9 @@
-package document_test
+package routes
 
 import (
 	"bytes"
+	"context"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,10 +13,23 @@ import (
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/sample"
 )
 
+type previewStore struct {
+	document.Store
+}
+
+const fileID = "12345678-1234-4123-8123-123456789abc"
+
+func (previewStore) ReadFileVersion(_ context.Context, owner, id string) ([]byte, error) {
+	if owner != "owner" || id != fileID {
+		return nil, fs.ErrNotExist
+	}
+	return sample.PDF, nil
+}
+
 func TestPreviewRoute(t *testing.T) {
 	signer := document.Signer{Now: time.Now}
 	mux := http.NewServeMux()
-	document.NewHandler(nil, fileStore{sample.PDF}, signer).Register(mux)
+	registerDocuments(mux, nil, document.NewHandler(previewStore{}, signer))
 	link := signer.Issue("owner", fileID)
 	for _, tc := range []struct {
 		name, url string

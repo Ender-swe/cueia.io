@@ -1,12 +1,14 @@
-package main
+package routes
 
 import (
 	"context"
 	"net/http"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 )
 
 type optionalProvider struct {
@@ -20,8 +22,17 @@ type providerStatus struct {
 	Status string `json:"status"`
 }
 
-func routes(authenticate func(context.Context, string) (string, error), providers []optionalProvider) *http.ServeMux {
+// New builds the API handler with session protection and rate limiting.
+func New(sessions *session.Service, store *workspace.Service, signer document.Signer) http.Handler {
 	mux := http.NewServeMux()
+	registerStatus(mux, sessions.Authenticate, nil)
+	registerSessions(mux, sessions)
+	registerWorkspace(mux, sessions.Authenticate, workspace.NewHandler(store))
+	registerDocuments(mux, sessions.Authenticate, document.NewHandler(store, signer))
+	return sessions.Protect(mux, middleware.NewLimiter(), sessionPath)
+}
+
+func registerStatus(mux *http.ServeMux, authenticate func(context.Context, string) (string, error), providers []optionalProvider) {
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		middleware.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -42,5 +53,4 @@ func routes(authenticate func(context.Context, string) (string, error), provider
 		}
 		middleware.WriteJSON(w, http.StatusOK, statuses)
 	}))
-	return mux
 }

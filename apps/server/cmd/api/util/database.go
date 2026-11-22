@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"context"
@@ -6,6 +6,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func openDatabase(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
+func OpenDatabase(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	return pgxpool.New(ctx, databaseURL)
 }

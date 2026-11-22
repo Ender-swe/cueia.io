@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
 	"net/http"
@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 )
@@ -22,7 +21,7 @@ func TestBrowserJourney(t *testing.T) {
 		t.Skip("requires an interactive Clerk test login")
 	}
 	store := testWorkspace(t, "sample")
-	dist, err := filepath.Abs("../../../dashboard/dist")
+	dist, err := filepath.Abs("../../../../dashboard/dist")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,15 +36,14 @@ func TestBrowserJourney(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mux := routes(s.Authenticate, nil)
-	workspaceRoutes(mux, s, store)
+
 	signer, err := document.Load(t.Context(), store.DB)
 	if err != nil {
 		t.Fatal(err)
 	}
-	document.NewHandler(s, store, signer).Register(mux)
+	handler := New(s, store, signer)
 	root := http.NewServeMux()
-	root.Handle("/api/", s.Protect(mux, middleware.NewLimiter()))
+	root.Handle("/api/", handler)
 	for _, path := range []string{"/workspace", "/sign-in", "/sign-in/", "/sign-up", "/sign-up/"} {
 		root.HandleFunc("GET "+path, func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, filepath.Join(dist, "index.html")) })
 	}
@@ -54,7 +52,7 @@ func TestBrowserJourney(t *testing.T) {
 	server.Start()
 	defer server.Close()
 	cmd := exec.CommandContext(t.Context(), "bun", "run", "journey.ts")
-	cmd.Dir = "../../../browser-worker"
+	cmd.Dir = "../../../../browser-worker"
 	cmd.Env = append(os.Environ(), "CUEIA_DASHBOARD_ORIGIN="+origin, "CUEIA_TEST_DEPLOYMENT="+store.Deployment, "CUEIA_TEST_DISKS="+store.Provider.(*providertest.Fixture).Directory)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -1,14 +1,14 @@
-package main
+package config
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
+	sharedconfig "github.com/Ender-swe/cueia.io/apps/server/internal/config"
 )
 
-type apiConfig struct {
+type Settings struct {
 	Mode                   string
 	Addr                   string
 	DatabaseURL            string
@@ -18,14 +18,14 @@ type apiConfig struct {
 	TestPreviewClockOffset string
 }
 
-func loadAPIConfig() (apiConfig, error) {
-	c := apiConfig{
+func Load() (Settings, error) {
+	c := Settings{
 		Mode:                   os.Getenv("CUEIA_MODE"),
 		Addr:                   os.Getenv("CUEIA_LISTEN_ADDR"),
-		DatabaseURL:            config.DatabaseURL(),
-		Deployment:             config.DeploymentID(),
+		DatabaseURL:            sharedconfig.DatabaseURL(),
+		Deployment:             sharedconfig.DeploymentID(),
 		TestVolumeRoot:         os.Getenv("CUEIA_TEST_VOLUME_ROOT"),
-		AzureLocation:          config.AzureLocation(),
+		AzureLocation:          sharedconfig.AzureLocation(),
 		TestPreviewClockOffset: os.Getenv("CUEIA_TEST_PREVIEW_CLOCK_OFFSET"),
 	}
 	if c.Mode == "" {

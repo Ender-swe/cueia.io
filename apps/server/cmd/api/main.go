@@ -10,8 +10,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/config"
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/util"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/azure"
@@ -20,9 +22,9 @@ import (
 
 func run(ctx context.Context) error {
 
-	settings, configErr := loadAPIConfig()
+	settings, configErr := config.Load()
 
-	db, err := openDatabase(ctx, settings.DatabaseURL)
+	db, err := util.OpenDatabase(ctx, settings.DatabaseURL)
 	if err != nil {
 		return errors.New("invalid database configuration")
 	}
@@ -45,8 +47,6 @@ func run(ctx context.Context) error {
 		store.Provider, store.ProviderName, store.Region = machines, "azure", settings.AzureLocation
 	}
 
-	mux := routes(sessions.Authenticate, nil)
-	workspaceRoutes(mux, sessions, store)
 	signer, err := document.Load(ctx, db)
 	if err != nil {
 		return errors.New("cannot load deployment signing key")
@@ -59,9 +59,7 @@ func run(ctx context.Context) error {
 		signer.Now = func() time.Time { return time.Now().Add(advance) }
 	}
 
-	document.NewHandler(sessions, store, signer).Register(mux)
-
-	server := &http.Server{Addr: settings.Addr, Handler: sessions.Protect(mux, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: settings.Addr, Handler: routes.New(sessions, store, signer), ReadHeaderTimeout: 5 * time.Second}
 	done := make(chan error, 1)
 
 	go func() { done <- server.ListenAndServe() }()

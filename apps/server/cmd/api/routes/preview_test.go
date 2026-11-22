@@ -1,8 +1,7 @@
-package main
+package routes
 
 import (
 	"bytes"
-
 	"encoding/json"
 	"io"
 	"net/http/httptest"
@@ -38,10 +37,9 @@ func TestPreviewAcrossServers(t *testing.T) {
 				errs[i] = err
 				return
 			}
-			mux := routes(s.Authenticate, nil)
-			workspaceRoutes(mux, s, store)
-			document.NewHandler(s, store, signer).Register(mux)
-			servers[i] = httptest.NewServer(mux)
+
+			handler := New(s, store, signer)
+			servers[i] = httptest.NewServer(handler)
 		})
 	}
 	close(start)

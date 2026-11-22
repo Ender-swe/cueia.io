@@ -1,8 +1,9 @@
-package main
+package routes
 
 import (
 	"context"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -43,7 +44,9 @@ func TestProviders(t *testing.T) {
 			req := httptest.NewRequest("GET", "/api/providers", nil)
 			req.Header.Set("Authorization", tc.authorization)
 			rec := httptest.NewRecorder()
-			routes(auth, tc.providers).ServeHTTP(rec, req)
+			mux := http.NewServeMux()
+			registerStatus(mux, auth, tc.providers)
+			mux.ServeHTTP(rec, req)
 			if rec.Code != tc.status || strings.TrimSpace(rec.Body.String()) != tc.body {
 				t.Errorf("unexpected response: %d %s", rec.Code, rec.Body)
 			}
@@ -53,7 +56,9 @@ func TestProviders(t *testing.T) {
 
 func TestPublicHealth(t *testing.T) {
 	rec := httptest.NewRecorder()
-	routes(nil, nil).ServeHTTP(rec, httptest.NewRequest("GET", "/api/health", nil))
+	mux := http.NewServeMux()
+	registerStatus(mux, nil, nil)
+	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/api/health", nil))
 	if rec.Code != 200 || strings.TrimSpace(rec.Body.String()) != `{"status":"ok"}` {
 		t.Fatalf("unexpected health response: %d %s", rec.Code, rec.Body)
 	}

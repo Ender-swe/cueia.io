@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
 	"context"
@@ -50,20 +50,19 @@ func TestWorkspaceHTTP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mux := routes(s.Authenticate, nil)
-	workspaceRoutes(mux, s, store)
+
 	signer, err := document.Load(t.Context(), store.DB)
 	if err != nil {
 		t.Fatal(err)
 	}
-	document.NewHandler(s, store, signer).Register(mux)
+	handler := New(s, store, signer)
 	alice := uuid.NewString()
-	a := login(t, mux, issuer.Token(t, alice)).Token
-	b := login(t, mux, issuer.Token(t, alice)).Token
-	bob := login(t, mux, issuer.Token(t, uuid.NewString())).Token
+	a := login(t, handler, issuer.Token(t, alice)).Token
+	b := login(t, handler, issuer.Token(t, alice)).Token
+	bob := login(t, handler, issuer.Token(t, uuid.NewString())).Token
 	check := func(method, path, token, body string, status int) []byte {
 		t.Helper()
-		rec := request(mux, method, path, token, body)
+		rec := request(handler, method, path, token, body)
 		if rec.Code != status {
 			t.Fatalf("%s %s: got %d want %d", method, path, rec.Code, status)
 		}
@@ -155,7 +154,7 @@ func testWorkspace(t *testing.T, mode string) *workspace.Service {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = database.Migrate(t.Context(), conn.Conn(), os.DirFS("../../migrations"))
+	err = database.Migrate(t.Context(), conn.Conn(), os.DirFS("../../../migrations"))
 	conn.Release()
 	if err != nil {
 		t.Fatal(err)
