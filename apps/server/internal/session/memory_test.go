@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
@@ -26,9 +27,10 @@ func TestFirstExchangesRecover(t *testing.T) {
 	ctx := t.Context()
 	sub := "first-" + uuid.NewString()
 	f.AfterAllocate = func(provider.Machine) error { return errors.New("lost response") }
-	verify := func(_ context.Context, token string) (string, error) { return token, nil }
-	sessions := NewServiceWithVerifier(s.DB, verify, s.Provision)
-	if _, err := sessions.Exchange(ctx, sub); err == nil {
+	issuer := sessiontest.NewIssuer(t)
+	sessions := NewService(t.Context(), s.DB, Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, s.Provision)
+	token := issuer.Token(t, sub)
+	if _, err := sessions.Exchange(ctx, token); err == nil {
 		t.Fatal("expected interruption")
 	}
 	f.AfterAllocate = nil
@@ -45,7 +47,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 	}
 	undo := fmt.Sprintf("DROP FUNCTION IF EXISTS %s() CASCADE", schema)
 	defer s.DB.Exec(context.Background(), undo)
-	if _, err = sessions.Exchange(ctx, sub); err == nil {
+	if _, err = sessions.Exchange(ctx, token); err == nil {
 		t.Fatal("expected interrupted transaction")
 	}
 	if _, err = s.Snapshot(ctx, pending); !errors.Is(err, pgx.ErrNoRows) {
@@ -59,7 +61,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 	var errs [2]error
 	var wg sync.WaitGroup
 	for i := range creds {
-		wg.Go(func() { <-start; creds[i], errs[i] = sessions.Exchange(ctx, sub) })
+		wg.Go(func() { <-start; creds[i], errs[i] = sessions.Exchange(ctx, token) })
 	}
 	close(start)
 	wg.Wait()
@@ -88,11 +90,12 @@ func TestStoredSessions(t *testing.T) {
 	for _, mode := range []string{"sample", "live"} {
 		t.Run(mode, func(t *testing.T) {
 			store := testWorkspace(t, mode)
-			s := NewServiceWithVerifier(store.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, store.Provision)
+			issuer := sessiontest.NewIssuer(t)
+			s := NewService(t.Context(), store.DB, Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
 			ctx := t.Context()
 			login := func(sub string) Credential {
 				t.Helper()
-				c, err := s.Exchange(ctx, sub)
+				c, err := s.Exchange(ctx, issuer.Token(t, sub))
 				if err != nil {
 					t.Fatal(err)
 				}

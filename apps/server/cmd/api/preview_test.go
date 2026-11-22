@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"context"
+
 	"encoding/json"
 	"io"
 	"net/http/httptest"
@@ -12,13 +12,15 @@ import (
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/sample"
 	"github.com/google/uuid"
 )
 
 func TestPreviewAcrossServers(t *testing.T) {
 	store := testWorkspace(t, "sample")
-	s := session.NewServiceWithVerifier(store.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, store.Provision)
+	issuer := sessiontest.NewIssuer(t)
+	s := session.NewService(t.Context(), store.DB, session.Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
 	var servers [2]*httptest.Server
 	var errs [2]error
 	start := make(chan struct{})
@@ -45,8 +47,8 @@ func TestPreviewAcrossServers(t *testing.T) {
 		}
 		t.Cleanup(servers[i].Close)
 	}
-	a := login(t, servers[0].Config.Handler, uuid.NewString()).Token
-	b := login(t, servers[1].Config.Handler, uuid.NewString()).Token
+	a := login(t, servers[0].Config.Handler, issuer.Token(t, uuid.NewString())).Token
+	b := login(t, servers[1].Config.Handler, issuer.Token(t, uuid.NewString())).Token
 	rec := request(servers[0].Config.Handler, "POST", "/api/documents", a, `{"path":"Attachments/north-pier-registration.pdf"}`)
 	var doc struct{ FileID string }
 	if rec.Code != 200 || json.Unmarshal(rec.Body.Bytes(), &doc) != nil {

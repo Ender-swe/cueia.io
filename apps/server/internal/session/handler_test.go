@@ -1,15 +1,15 @@
 package session
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
+
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
 )
 
 func TestOriginAndRateLimit(t *testing.T) {
@@ -53,12 +53,8 @@ func TestOriginAndRateLimit(t *testing.T) {
 
 func TestSessionRoutes(t *testing.T) {
 	store := testWorkspace(t, "sample")
-	service := NewServiceWithVerifier(store.DB, func(_ context.Context, token string) (string, error) {
-		if token != "clerk-fixture" {
-			return "", errors.New("invalid credential")
-		}
-		return "user", nil
-	}, store.Provision)
+	issuer := sessiontest.NewIssuer(t)
+	service := NewService(t.Context(), store.DB, Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
 	mux := http.NewServeMux()
 	NewHandler(service).Register(mux)
 	call := func(method, token string, status int) *httptest.ResponseRecorder {
@@ -76,7 +72,7 @@ func TestSessionRoutes(t *testing.T) {
 	}
 	call("POST", "", 401)
 	call("POST", "malformed", 401)
-	res := call("POST", "clerk-fixture", 200)
+	res := call("POST", issuer.Token(t, "user"), 200)
 	var body struct {
 		Token     string    `json:"token"`
 		ExpiresAt time.Time `json:"expiresAt"`

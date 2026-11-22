@@ -12,6 +12,7 @@ import (
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 	"github.com/google/uuid"
@@ -28,9 +29,9 @@ func request(h http.Handler, method, path, token, body string) *httptest.Respons
 	return w
 }
 
-func login(t *testing.T, handler http.Handler, subject string) session.Credential {
+func login(t *testing.T, handler http.Handler, clerkToken string) session.Credential {
 	t.Helper()
-	rec := request(handler, "POST", "/api/session", subject, "")
+	rec := request(handler, "POST", "/api/session", clerkToken, "")
 	var c session.Credential
 	if rec.Code != 200 || json.Unmarshal(rec.Body.Bytes(), &c) != nil || c.Token == "" || !c.ExpiresAt.After(time.Now()) {
 		t.Fatalf("session exchange failed (status %d)", rec.Code)
@@ -40,13 +41,14 @@ func login(t *testing.T, handler http.Handler, subject string) session.Credentia
 
 func TestWorkspaceHTTP(t *testing.T) {
 	store := testWorkspace(t, "sample")
-	s := session.NewServiceWithVerifier(store.DB, func(_ context.Context, subject string) (string, error) { return subject, nil }, store.Provision)
+	issuer := sessiontest.NewIssuer(t)
+	s := session.NewService(t.Context(), store.DB, session.Config{ClerkIssuer: issuer.URL, AuthorizedParty: sessiontest.Origin}, store.Provision)
 	mux := routes(s.Authenticate, nil)
 	workspaceRoutes(mux, s, store)
 	alice := uuid.NewString()
-	a := login(t, mux, alice).Token
-	b := login(t, mux, alice).Token
-	bob := login(t, mux, uuid.NewString()).Token
+	a := login(t, mux, issuer.Token(t, alice)).Token
+	b := login(t, mux, issuer.Token(t, alice)).Token
+	bob := login(t, mux, issuer.Token(t, uuid.NewString())).Token
 	check := func(method, path, token, body string, status int) []byte {
 		t.Helper()
 		rec := request(mux, method, path, token, body)
