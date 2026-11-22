@@ -23,6 +23,10 @@ import (
 func run(ctx context.Context) error {
 	// Load deployment settings and keep the database open for the server's lifetime.
 	settings, configErr := config.Load()
+	sessionConfig, sessionErr := session.LoadConfig()
+	if err := errors.Join(configErr, sessionErr); err != nil {
+		return err
+	}
 
 	db, err := util.OpenDatabase(ctx, settings.DatabaseURL)
 	if err != nil {
@@ -32,10 +36,7 @@ func run(ctx context.Context) error {
 
 	// Give the session service a callback to provision workspaces.
 	store := &workspace.Service{DB: db, Deployment: settings.Deployment, Mode: settings.Mode}
-	sessions, sessionErr := session.NewService(ctx, db, store.Provision)
-	if err := errors.Join(configErr, sessionErr); err != nil {
-		return err
-	}
+	sessions := sessionConfig.NewService(ctx, db, store.Provision)
 
 	// Sample mode can use a local fixture directory. Other configurations use Azure.
 	if dir := settings.TestVolumeRoot; dir != "" && settings.Mode == "sample" {

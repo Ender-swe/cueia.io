@@ -27,14 +27,16 @@ func TestRequiredAPISettings(t *testing.T) {
 	for _, mode := range []string{"sample", "live"} {
 		t.Run(mode, func(t *testing.T) {
 			t.Setenv("CUEIA_MODE", mode)
-			t.Setenv("DATABASE_URL", "postgres://localhost/cueia")
 			for _, name := range required {
 				t.Setenv(name, "")
 			}
-			diagnostic := startupError(t)
-			for _, name := range required {
-				if !strings.Contains(diagnostic, name) {
-					t.Errorf("missing diagnostic for %s", name)
+			for _, url := range []string{"postgres://localhost/cueia", "postgres://%"} {
+				t.Setenv("DATABASE_URL", url)
+				diagnostic := startupError(t)
+				for _, name := range required {
+					if !strings.Contains(diagnostic, name) {
+						t.Errorf("with DATABASE_URL %q: missing diagnostic for %s", url, name)
+					}
 				}
 			}
 			const secret = "test-only-private-value"

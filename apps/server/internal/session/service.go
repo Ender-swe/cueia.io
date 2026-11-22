@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -23,17 +22,21 @@ type Service struct {
 }
 
 func NewService(ctx context.Context, db *pgxpool.Pool, provision func(context.Context, string) (string, error)) (*Service, error) {
-	cfg, missing := loadConfig()
-	if len(missing) > 0 {
-		return nil, fmt.Errorf("missing settings: %s", strings.Join(missing, ", "))
+	cfg, err := LoadConfig()
+	if err != nil {
+		return nil, err
 	}
+	return cfg.NewService(ctx, db, provision), nil
+}
+
+func (cfg Config) NewService(ctx context.Context, db *pgxpool.Pool, provision func(context.Context, string) (string, error)) *Service {
 	issuer := strings.TrimSuffix(cfg.ClerkIssuer, "/")
 	keys := oidc.NewRemoteKeySet(ctx, issuer+"/.well-known/jwks.json")
 	verifier := oidc.NewVerifier(issuer, keys, &oidc.Config{
 		SkipClientIDCheck:    true,
 		SupportedSigningAlgs: []string{"RS256"},
 	})
-	return &Service{memory: memory{db: db}, verifier: verifier, authorizedParty: cfg.AuthorizedParty, provision: provision}, nil
+	return &Service{memory: memory{db: db}, verifier: verifier, authorizedParty: cfg.AuthorizedParty, provision: provision}
 }
 
 // Verify checks the Clerk token and returns its subject.

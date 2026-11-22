@@ -1,6 +1,7 @@
 package session
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -10,14 +11,14 @@ const (
 	sessionLifetime = "12 hours"
 )
 
-type config struct {
+type Config struct {
 	ClerkIssuer     string
 	AuthorizedParty string
 }
 
-// loadConfig returns the session settings and the names of any missing variables.
-func loadConfig() (config, []string) {
-	c := config{
+// LoadConfig reads the required Clerk settings for the session service.
+func LoadConfig() (Config, error) {
+	c := Config{
 		ClerkIssuer:     os.Getenv("CLERK_ISSUER"),
 		AuthorizedParty: os.Getenv("CLERK_AUTHORIZED_PARTY"),
 	}
@@ -28,5 +29,8 @@ func loadConfig() (config, []string) {
 	if strings.TrimSpace(c.AuthorizedParty) == "" {
 		missing = append(missing, "CLERK_AUTHORIZED_PARTY")
 	}
-	return c, missing
+	if len(missing) > 0 {
+		return Config{}, fmt.Errorf("missing settings: %s", strings.Join(missing, ", "))
+	}
+	return c, nil
 }
