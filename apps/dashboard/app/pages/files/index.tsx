@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { AttachmentPreview } from "@cueia/components";
-import { SearchBox } from "../workspace-panels";
-import { api, type Schema } from "../api";
+import { SearchBox } from "../../workspace-panels";
+import { api, type Schema } from "../../api";
+import { DirectoryToolbar } from "./components/directory-toolbar";
+import { FileResults } from "./components/file-results";
 
 export function Files({ token }: { token: string }) {
   const [directory, setDirectory] = useState(".");
@@ -74,47 +76,18 @@ export function Files({ token }: { token: string }) {
   return (
     <>
       <SearchBox label="Search files" value={query} onChange={setQuery} />
-      <div className="flex flex-wrap gap-1.5 items-center my-2 text-[13px] [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md">
-        {directory !== "." && (
-          <button
-            onClick={() =>
-              openDirectory(directory.split("/").slice(0, -1).join("/") || ".")
-            }
-          >
-            Up
-          </button>
-        )}
-        <span className="flex-1">
-          {directory === "." ? "Workspace" : directory}
-        </span>
-        <button onClick={() => refresh((n) => n + 1)}>Refresh</button>
-      </div>
-      {error && <p role="alert">{error}</p>}
-      {entries === null && !error && <p role="status">Loading files…</p>}
-      {entries?.length === 0 && (
-        <p>{name ? "No matching files." : "This directory is empty."}</p>
-      )}
-      <ul className="[list-style:none] p-0 text-[14px] [&_button]:max-w-full [&_button]:py-1 [&_button]:px-0 [&_button]:text-left [&_button]:bg-transparent [&_button]:border-0 [&_button]:wrap-anywhere [&_button:hover]:underline">
-        {entries?.map((entry) => (
-          <li
-            className="[border-top:1px_solid_var(--color-line)] py-2 wrap-anywhere"
-            key={entry.path}
-          >
-            {entry.kind === "directory" ? (
-              <button onClick={() => openDirectory(entry.path)}>
-                {entry.name}/
-              </button>
-            ) : /\.pdf$/i.test(entry.name) ? (
-              <button onClick={(e) => void preview(entry, e.currentTarget)}>
-                {entry.name}
-              </button>
-            ) : (
-              <span>{entry.name}</span>
-            )}
-            {name && <small className="block text-muted">{entry.path}</small>}
-          </li>
-        ))}
-      </ul>
+      <DirectoryToolbar
+        directory={directory}
+        openDirectory={openDirectory}
+        onRefresh={() => refresh((n) => n + 1)}
+      />
+      <FileResults
+        entries={entries}
+        error={error}
+        searching={!!name}
+        openDirectory={openDirectory}
+        preview={preview}
+      />
       <AttachmentPreview
         attachment={attachment}
         onClose={() => {

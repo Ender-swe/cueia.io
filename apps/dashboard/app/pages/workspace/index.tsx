@@ -1,7 +1,8 @@
 import { useAuth, useClerk } from "@clerk/react";
 import { useEffect, useState } from "react";
-import { api, type Schema } from "../api";
-import { Chat } from "./chat";
+import { api, type Schema } from "../../api";
+import { Chat } from "../chat";
+import { WorkspaceStatus } from "./components/workspace-status";
 
 export function WorkspacePage() {
   const { isSignedIn, getToken, sessionId } = useAuth();
@@ -46,25 +47,9 @@ export function WorkspacePage() {
     return () => controller.abort();
   }, [sessionId, isSignedIn, getToken, attempt]);
 
-  if (error)
-    return (
-      <main
-        className="font-sans text-ink leading-normal [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md [&_a]:text-apricot min-h-dvh grid place-content-center gap-3 p-6"
-        role="alert"
-      >
-        Could not open your workspace.{" "}
-        <button onClick={() => retry((n) => n + 1)}>Retry</button>
-      </main>
-    );
+  if (error) return <WorkspaceStatus onRetry={() => retry((n) => n + 1)} />;
   if (!workspace || workspace.sessionId !== sessionId)
-    return (
-      <main
-        className="font-sans text-ink leading-normal [&_button]:py-1 [&_button]:px-2 [&_button]:bg-raised [&_button]:[border:1px_solid_var(--color-line)] [&_button]:rounded-md [&_a]:text-apricot min-h-dvh grid place-content-center gap-3 p-6"
-        role="status"
-      >
-        Opening your workspace…
-      </main>
-    );
+    return <WorkspaceStatus />;
   return (
     <Chat
       key={workspace.sessionId}
