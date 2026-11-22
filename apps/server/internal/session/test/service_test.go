@@ -1,9 +1,11 @@
-package session
+package sessiontest_test
 
 import (
 	"errors"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
 	"testing"
+
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
 )
 
 func TestClerkServiceVerify(t *testing.T) {
@@ -11,12 +13,12 @@ func TestClerkServiceVerify(t *testing.T) {
 	const origin = sessiontest.Origin
 	t.Setenv("CLERK_ISSUER", issuer.URL+"/")
 	t.Setenv("CLERK_AUTHORIZED_PARTY", origin)
-	service, err := NewService(t.Context(), nil, nil)
+	service, err := session.NewService(t.Context(), nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, token := range []string{"", "invalid"} {
-		if sub, err := service.Verify(t.Context(), token); sub != "" || !errors.Is(err, ErrUnauthorized) {
+		if sub, err := service.Verify(t.Context(), token); sub != "" || !errors.Is(err, session.ErrUnauthorized) {
 			t.Errorf("Verify(%q) = (%q, %v), want empty subject and ErrUnauthorized", token, sub, err)
 		}
 	}
@@ -39,7 +41,7 @@ func TestClerkServiceVerify(t *testing.T) {
 				if sub != tc.sub || err != nil {
 					t.Fatalf("valid token: subject %q, error %v", sub, err)
 				}
-			} else if sub != "" || !errors.Is(err, ErrUnauthorized) {
+			} else if sub != "" || !errors.Is(err, session.ErrUnauthorized) {
 				t.Fatalf("invalid token: subject %q, error %v", sub, err)
 			}
 		})

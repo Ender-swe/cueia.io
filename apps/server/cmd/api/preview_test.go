@@ -12,7 +12,7 @@ import (
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/sample"
 	"github.com/google/uuid"
 )

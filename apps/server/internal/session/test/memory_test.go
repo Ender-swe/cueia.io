@@ -1,4 +1,4 @@
-package session
+package sessiontest_test
 
 import (
 	"context"
@@ -12,7 +12,8 @@ import (
 	"time"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
@@ -30,7 +31,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 	issuer := sessiontest.NewIssuer(t)
 	t.Setenv("CLERK_ISSUER", issuer.URL)
 	t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
-	sessions, err := NewService(t.Context(), s.DB, s.Provision)
+	sessions, err := session.NewService(t.Context(), s.DB, s.Provision)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +63,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 		t.Fatal(err)
 	}
 	start := make(chan struct{})
-	var creds [2]Credential
+	var creds [2]session.Credential
 	var errs [2]error
 	var wg sync.WaitGroup
 	for i := range creds {
@@ -98,12 +99,12 @@ func TestStoredSessions(t *testing.T) {
 			issuer := sessiontest.NewIssuer(t)
 			t.Setenv("CLERK_ISSUER", issuer.URL)
 			t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
-			s, err := NewService(t.Context(), store.DB, store.Provision)
+			s, err := session.NewService(t.Context(), store.DB, store.Provision)
 			if err != nil {
 				t.Fatal(err)
 			}
 			ctx := t.Context()
-			login := func(sub string) Credential {
+			login := func(sub string) session.Credential {
 				t.Helper()
 				c, err := s.Exchange(ctx, issuer.Token(t, sub))
 				if err != nil {
@@ -116,7 +117,7 @@ func TestStoredSessions(t *testing.T) {
 			if a.Token == b.Token {
 				t.Fatal("repeated session credential")
 			}
-			owner := func(c Credential) string {
+			owner := func(c session.Credential) string {
 				t.Helper()
 				w, err := s.Authenticate(ctx, c.Token)
 				if err != nil {
@@ -127,7 +128,7 @@ func TestStoredSessions(t *testing.T) {
 			if owner(a) != owner(b) || owner(a) == owner(other) {
 				t.Fatal("incorrect workspace ownership")
 			}
-			for _, c := range []Credential{a, b, other} {
+			for _, c := range []session.Credential{a, b, other} {
 				digest := sha256.Sum256([]byte(c.Token))
 				var expires time.Time
 				if err := store.DB.QueryRow(ctx, "SELECT expires_at FROM sessions WHERE token_digest=$1", digest[:]).Scan(&expires); err != nil || !expires.Equal(c.ExpiresAt) {
@@ -185,7 +186,7 @@ func testWorkspace(t *testing.T, mode string) *workspace.Service {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = database.Migrate(t.Context(), conn.Conn(), os.DirFS("../../migrations"))
+	err = database.Migrate(t.Context(), conn.Conn(), os.DirFS("../../../migrations"))
 	conn.Release()
 	if err != nil {
 		t.Fatal(err)

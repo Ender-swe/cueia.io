@@ -22,6 +22,20 @@ type Service struct {
 	provision       func(context.Context, string) (string, error)
 }
 
+func NewService(ctx context.Context, db *pgxpool.Pool, provision func(context.Context, string) (string, error)) (*Service, error) {
+	cfg, missing := loadConfig()
+	if len(missing) > 0 {
+		return nil, fmt.Errorf("missing settings: %s", strings.Join(missing, ", "))
+	}
+	issuer := strings.TrimSuffix(cfg.ClerkIssuer, "/")
+	keys := oidc.NewRemoteKeySet(ctx, issuer+"/.well-known/jwks.json")
+	verifier := oidc.NewVerifier(issuer, keys, &oidc.Config{
+		SkipClientIDCheck:    true,
+		SupportedSigningAlgs: []string{"RS256"},
+	})
+	return &Service{memory: memory{db: db}, verifier: verifier, authorizedParty: cfg.AuthorizedParty, provision: provision}, nil
+}
+
 // Verify checks the Clerk token and returns its subject.
 func (s *Service) Verify(ctx context.Context, clerkToken string) (string, error) {
 	if clerkToken == "" {
@@ -39,20 +53,6 @@ func (s *Service) Verify(ctx context.Context, clerkToken string) (string, error)
 		return "", ErrUnauthorized
 	}
 	return token.Subject, nil
-}
-
-func NewService(ctx context.Context, db *pgxpool.Pool, provision func(context.Context, string) (string, error)) (*Service, error) {
-	cfg, missing := loadConfig()
-	if len(missing) > 0 {
-		return nil, fmt.Errorf("missing settings: %s", strings.Join(missing, ", "))
-	}
-	issuer := strings.TrimSuffix(cfg.ClerkIssuer, "/")
-	keys := oidc.NewRemoteKeySet(ctx, issuer+"/.well-known/jwks.json")
-	verifier := oidc.NewVerifier(issuer, keys, &oidc.Config{
-		SkipClientIDCheck:    true,
-		SupportedSigningAlgs: []string{"RS256"},
-	})
-	return &Service{memory: memory{db: db}, verifier: verifier, authorizedParty: cfg.AuthorizedParty, provision: provision}, nil
 }
 
 func (s *Service) Exchange(ctx context.Context, clerkToken string) (Credential, error) {

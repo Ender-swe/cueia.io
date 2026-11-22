@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/fs"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -26,7 +27,7 @@ func (h *Handler) Register(mux *http.ServeMux) {
 func (h *Handler) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json")
-	credential, err := h.sessions.Exchange(r.Context(), Bearer(r))
+	credential, err := h.sessions.Exchange(r.Context(), bearerToken(r))
 	if err != nil {
 		status, code := http.StatusServiceUnavailable, "unavailable"
 		if errors.Is(err, ErrUnauthorized) {
@@ -39,7 +40,7 @@ func (h *Handler) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RevokeHTTP(w http.ResponseWriter, r *http.Request, _ string) {
-	if err := h.sessions.Revoke(r.Context(), Bearer(r)); err != nil {
+	if err := h.sessions.Revoke(r.Context(), bearerToken(r)); err != nil {
 		switch {
 		case errors.Is(err, fs.ErrInvalid):
 			reject(w, 400, "invalid_request")
@@ -58,7 +59,7 @@ type OwnerHandler func(http.ResponseWriter, *http.Request, string)
 func Require(authenticate func(context.Context, string) (string, error), next OwnerHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
-		token := Bearer(r)
+		token := bearerToken(r)
 		if token == "" {
 			reject(w, 401, "unauthorized")
 			return
@@ -74,6 +75,19 @@ func Require(authenticate func(context.Context, string) (string, error), next Ow
 		}
 		next(w, r, owner)
 	}
+}
+
+// bearerToken reads the single credential carried in the Authorization header.
+func bearerToken(r *http.Request) string {
+	headers := r.Header.Values("Authorization")
+	if len(headers) != 1 {
+		return ""
+	}
+	fields := strings.Fields(headers[0])
+	if len(fields) != 2 || !strings.EqualFold(fields[0], "Bearer") {
+		return ""
+	}
+	return fields[1]
 }
 
 func reject(w http.ResponseWriter, status int, code string) {

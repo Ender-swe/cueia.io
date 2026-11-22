@@ -1,15 +1,15 @@
-package session
+package sessiontest_test
 
 import (
 	"encoding/json"
-
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/session/sessiontest"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
 )
 
 func TestOriginAndRateLimit(t *testing.T) {
@@ -18,14 +18,19 @@ func TestOriginAndRateLimit(t *testing.T) {
 	l.Limit = 2
 	l.Now = func() time.Time { return now }
 	calls := 0
-	service := &Service{authorizedParty: sessiontest.Origin}
+	t.Setenv("CLERK_ISSUER", "https://issuer.example")
+	t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
+	service, err := session.NewService(t.Context(), nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	h := service.Protect(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
 		if r.Header.Get("Authorization") == "Bearer valid" {
 			w.WriteHeader(200)
 			return
 		}
-		reject(w, 401, "unauthorized")
+		w.WriteHeader(http.StatusUnauthorized)
 	}), l)
 	try := func(peer, origin, auth string, want int) {
 		t.Helper()
@@ -57,12 +62,12 @@ func TestSessionRoutes(t *testing.T) {
 	issuer := sessiontest.NewIssuer(t)
 	t.Setenv("CLERK_ISSUER", issuer.URL)
 	t.Setenv("CLERK_AUTHORIZED_PARTY", sessiontest.Origin)
-	service, err := NewService(t.Context(), store.DB, store.Provision)
+	service, err := session.NewService(t.Context(), store.DB, store.Provision)
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	NewHandler(service).Register(mux)
+	session.NewHandler(service).Register(mux)
 	call := func(method, token string, status int) *httptest.ResponseRecorder {
 		t.Helper()
 		r := httptest.NewRequest(method, "/api/session", nil)
