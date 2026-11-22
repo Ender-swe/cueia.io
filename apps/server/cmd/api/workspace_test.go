@@ -102,6 +102,7 @@ func TestWorkspaceHTTP(t *testing.T) {
 		status             int
 		code, message      string
 	}{
+		{"POST", "/api/documents", `{"path":"notes.txt"}`, 400, "invalid_request", "Bad Request"},
 		{"PATCH", "/api/workspace/preferences", `{"timeFormat":null}`, 400, "invalid_request", "Bad Request"},
 		{"GET", "/api/documents/" + uuid.NewString() + "/content", "", 404, "not_found", "Not Found"},
 	} {

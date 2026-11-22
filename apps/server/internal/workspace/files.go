@@ -141,7 +141,7 @@ func (s *Service) Read(ctx context.Context, w, name string) ([]byte, error) {
 	if id, ok, err := s.attachment(ctx, w, name, d); err != nil {
 		return nil, err
 	} else if ok {
-		return s.Document(ctx, w, id)
+		return s.ReadFileVersion(ctx, w, id)
 	}
 	return fs.ReadFile(d, name)
 }

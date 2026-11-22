@@ -77,7 +77,7 @@ func TestPublicationRecovery(t *testing.T) {
 				return nil
 			}
 			err := pgx.BeginFunc(ctx, s.DB, func(tx pgx.Tx) error {
-				_, err := publish(ctx, tx, w, d, name, sample.PDF)
+				_, err := publish(ctx, tx, w, d, name, "application/pdf", sample.PDF)
 				if err == nil {
 					return errors.New("simulate rollback before commit")
 				}
@@ -101,7 +101,7 @@ func TestPublicationRecovery(t *testing.T) {
 			var first string
 			for range 2 {
 				err = pgx.BeginFunc(ctx, s.DB, func(tx pgx.Tx) error {
-					id, err := publish(ctx, tx, w, d, name, sample.PDF)
+					id, err := publish(ctx, tx, w, d, name, "application/pdf", sample.PDF)
 					if first != "" && id != first {
 						return fmt.Errorf("file ID changed")
 					}
@@ -112,7 +112,7 @@ func TestPublicationRecovery(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got, err := s.Document(ctx, w, first)
+			got, err := s.ReadFileVersion(ctx, w, first)
 			if err != nil || !bytes.Equal(got, sample.PDF) {
 				t.Fatal("recovered bytes", err)
 			}
@@ -170,11 +170,28 @@ func TestStorageIsolation(t *testing.T) {
 		if err != nil || string(got) != w {
 			t.Fatal(err)
 		}
+		if err = d.WriteFile("reports/invalid.pdf", []byte("plain text"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		documents := document.NewService(s, document.Signer{})
+		if _, err := documents.Register(ctx, w, "reports/invalid.pdf"); !errors.Is(err, fs.ErrInvalid) {
+			t.Fatal("expected invalid PDF error", err)
+		}
+		csvID, err := s.RegisterFileVersion(ctx, w, "reports/activity.csv", "text/csv", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var mediaType string
+		if err := s.DB.QueryRow(ctx, "SELECT media_type FROM files WHERE workspace_id=$1 AND id=$2", w, csvID).Scan(&mediaType); err != nil || mediaType != "text/csv" {
+			t.Fatal("registered CSV media type", mediaType, err)
+		}
 		var results [2]string
 		var errs [2]error
 		var wg sync.WaitGroup
 		for i := range results {
-			wg.Go(func() { results[i], errs[i] = s.Register(ctx, w, "reports/form.pdf") })
+			wg.Go(func() {
+				results[i], errs[i] = s.RegisterFileVersion(ctx, w, "reports/form.pdf", "application/pdf", nil)
+			})
 		}
 		wg.Wait()
 		if errs[0] != nil || errs[1] != nil || results[0] != results[1] {
@@ -188,17 +205,17 @@ func TestStorageIsolation(t *testing.T) {
 		if err = d.WriteFile("reports/form.pdf", append(bytes.Clone(sample.PDF), '\n'), 0600); err != nil {
 			t.Fatal(err)
 		}
-		newer, err := s.Register(ctx, w, "reports/form.pdf")
+		newer, err := s.RegisterFileVersion(ctx, w, "reports/form.pdf", "application/pdf", nil)
 		if err != nil || newer == results[0] {
 			t.Fatal("unchanged version", err)
 		}
-		got, err = s.Document(ctx, w, results[0])
+		got, err = s.ReadFileVersion(ctx, w, results[0])
 		if err != nil || !bytes.Equal(got, sample.PDF) {
 			t.Fatal("old bytes changed", err)
 		}
 		d.Close()
 	}
-	if _, err = s.Document(ctx, bob, fileID); !errors.Is(err, pgx.ErrNoRows) {
+	if _, err = s.ReadFileVersion(ctx, bob, fileID); !errors.Is(err, pgx.ErrNoRows) {
 		t.Fatal("foreign read", err)
 	}
 	if _, err = s.Preferences(ctx, alice, map[string]string{"timeFormat": "24h"}); err != nil {
@@ -221,7 +238,7 @@ func TestStorageIsolation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, err := s.Document(ctx, alice, fileID); err != nil || !bytes.Equal(got, sample.PDF) {
+	if got, err := s.ReadFileVersion(ctx, alice, fileID); err != nil || !bytes.Equal(got, sample.PDF) {
 		t.Fatal("replacement did not reopen captured PDF", err)
 	}
 }
@@ -317,15 +334,20 @@ func TestOwnerCollections(t *testing.T) {
 		}
 		threads = append(threads, th[0].ID)
 		events = append(events, ev[0].ID)
-		fileIDs = append(fileIDs, th[0].Messages[0].Attachments[0].FileID)
+		attachmentID := th[0].Messages[0].Attachments[0].FileID
+		registeredID, err := s.RegisterFileVersion(ctx, w, "Attachments/north-pier-registration.pdf", "application/pdf", nil)
+		if err != nil || registeredID != attachmentID {
+			t.Fatal("registration did not reuse the attachment ID", registeredID, attachmentID, err)
+		}
+		fileIDs = append(fileIDs, attachmentID)
 	}
 	if threads[0] == threads[1] || events[0] == events[1] || fileIDs[0] == fileIDs[1] {
 		t.Fatal("owner lists share a record")
 	}
-	if _, err = s.Document(ctx, bob, fileIDs[0]); !errors.Is(err, pgx.ErrNoRows) {
+	if _, err = s.ReadFileVersion(ctx, bob, fileIDs[0]); !errors.Is(err, pgx.ErrNoRows) {
 		t.Fatal("foreign file accessible", err)
 	}
-	got, err := s.Document(ctx, alice, fileIDs[0])
+	got, err := s.ReadFileVersion(ctx, alice, fileIDs[0])
 	if err != nil || !bytes.Equal(got, sample.PDF) {
 		t.Fatal("Alice's original bytes", err)
 	}
@@ -396,7 +418,7 @@ func TestDirectWritesAndPreview(t *testing.T) {
 	if err = os.WriteFile(filepath.Join(root, filename), sample.PDF, 0600); err != nil {
 		t.Fatal(err)
 	}
-	id, err := s.Register(ctx, w, filename)
+	id, err := s.RegisterFileVersion(ctx, w, filename, "application/pdf", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -412,7 +434,7 @@ func TestDirectWritesAndPreview(t *testing.T) {
 	if err = os.WriteFile(filepath.Join(root, filename), changed, 0600); err != nil {
 		t.Fatal(err)
 	}
-	next, err := s.Register(ctx, w, filename)
+	next, err := s.RegisterFileVersion(ctx, w, filename, "application/pdf", nil)
 	if err != nil || next == id {
 		t.Fatal("expected new version", err)
 	}
@@ -424,11 +446,11 @@ func TestDirectWritesAndPreview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := s.Document(ctx, authorizedOwner, id)
+	got, err := s.ReadFileVersion(ctx, authorizedOwner, id)
 	if err != nil || !bytes.Equal(got, sample.PDF) {
 		t.Fatal("earlier preview changed", err)
 	}
-	got, err = s.Document(ctx, w, next)
+	got, err = s.ReadFileVersion(ctx, w, next)
 	if err != nil || !bytes.Equal(got, changed) {
 		t.Fatal("new version", err)
 	}

@@ -86,11 +86,11 @@ func (s *Store) Reconcile() error {
 }
 
 func (s *Store) Publish(name string, data []byte) (string, error) {
-	if !fs.ValidPath(name) || name == "." || !bytes.HasPrefix(data, []byte("%PDF-")) {
+	if !fs.ValidPath(name) || name == "." {
 		return "", fs.ErrInvalid
 	}
 	key := Key(name, data)
-	file, err := os.CreateTemp(filepath.Join(s.private.Name(), "staging"), "pdf-")
+	file, err := os.CreateTemp(filepath.Join(s.private.Name(), "staging"), "file-")
 	if err != nil {
 		return "", err
 	}

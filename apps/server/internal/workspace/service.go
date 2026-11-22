@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
@@ -131,7 +130,7 @@ func seed(ctx context.Context, tx pgx.Tx, w string, d provider.Filesystem) error
 	if err != nil {
 		return err
 	}
-	fileID, err := publish(ctx, tx, w, d, "Attachments/"+v.Filename, sample.PDF)
+	fileID, err := publish(ctx, tx, w, d, "Attachments/"+v.Filename, "application/pdf", sample.PDF)
 	if err != nil {
 		return err
 	}
@@ -195,7 +194,7 @@ func (s *Service) open(ctx context.Context, w string) (provider.Filesystem, erro
 	return disk, nil
 }
 
-func publish(ctx context.Context, tx pgx.Tx, w string, d provider.Filesystem, name string, data []byte) (string, error) {
+func publish(ctx context.Context, tx pgx.Tx, w string, d provider.Filesystem, name, mediaType string, data []byte) (string, error) {
 	key, err := d.Publish(name, data)
 	if err != nil {
 		return "", err
@@ -203,15 +202,15 @@ func publish(ctx context.Context, tx pgx.Tx, w string, d provider.Filesystem, na
 	digest := sha256.Sum256(data)
 	var id string
 	err = tx.QueryRow(ctx, `INSERT INTO files(workspace_id,filename,media_type,byte_size,sha256_digest,storage_key)
- VALUES($1,$2,'application/pdf',$3,$4,$5) ON CONFLICT(workspace_id,storage_key) DO NOTHING RETURNING id`, w, path.Base(name), len(data), digest[:], key).Scan(&id)
+ VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(workspace_id,storage_key) DO NOTHING RETURNING id`, w, path.Base(name), mediaType, len(data), digest[:], key).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		err = tx.QueryRow(ctx, "SELECT id FROM files WHERE workspace_id=$1 AND storage_key=$2", w, key).Scan(&id)
 	}
 	return id, err
 }
 
-func (s *Service) Register(ctx context.Context, w, name string) (string, error) {
-	if !fs.ValidPath(name) || !strings.EqualFold(path.Ext(name), ".pdf") {
+func (s *Service) RegisterFileVersion(ctx context.Context, w, name, mediaType string, validate func([]byte) error) (string, error) {
+	if !fs.ValidPath(name) {
 		return "", fs.ErrInvalid
 	}
 	d, err := s.open(ctx, w)
@@ -226,13 +225,18 @@ func (s *Service) Register(ctx context.Context, w, name string) (string, error) 
 	if err != nil {
 		return "", err
 	}
+	if validate != nil {
+		if err := validate(data); err != nil {
+			return "", err
+		}
+	}
 	var id string
 	err = pgx.BeginFunc(ctx, s.DB, func(tx pgx.Tx) error {
 		if err := lock(ctx, tx, w, true); err != nil {
 			return err
 		}
 		var err error
-		id, err = publish(ctx, tx, w, d, name, data)
+		id, err = publish(ctx, tx, w, d, name, mediaType, data)
 		return err
 	})
 	return id, err
@@ -254,7 +258,7 @@ func (s *Service) attachment(ctx context.Context, w, name string, d provider.Fil
 	return id, err == nil, err
 }
 
-func (s *Service) Document(ctx context.Context, w, id string) ([]byte, error) {
+func (s *Service) ReadFileVersion(ctx context.Context, w, id string) ([]byte, error) {
 	var key string
 	err := s.DB.QueryRow(ctx, "SELECT storage_key FROM files WHERE workspace_id=$1 AND id=$2", w, id).Scan(&key)
 	if err != nil {
