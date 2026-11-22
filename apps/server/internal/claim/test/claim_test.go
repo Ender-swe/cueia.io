@@ -1,9 +1,10 @@
-package claim
+package claim_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/claim"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/jackc/pgx/v5"
 )
@@ -34,7 +35,7 @@ func TestClaimAtVersion(t *testing.T) {
 		version int64
 		success bool
 	}{{3, false}, {4, true}, {4, false}, {5, false}} {
-		claimed, err := AtVersion(ctx, conn, id, step.version)
+		claimed, err := claim.AtVersion(ctx, conn, id, step.version)
 		if err != nil || claimed != step.success {
 			t.Fatalf("version %d: claimed=%t err=%v", step.version, claimed, err)
 		}

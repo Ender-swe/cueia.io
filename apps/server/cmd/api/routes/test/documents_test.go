@@ -1,4 +1,4 @@
-package routes
+package routes_test
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/sample"
 )
@@ -29,7 +30,7 @@ func (previewStore) ReadFileVersion(_ context.Context, owner, id string) ([]byte
 func TestPreviewRoute(t *testing.T) {
 	signer := document.Signer{Now: time.Now}
 	mux := http.NewServeMux()
-	registerDocuments(mux, nil, document.NewHandler(previewStore{}, signer))
+	routes.RegisterDocuments(mux, nil, document.NewHandler(previewStore{}, signer))
 	link := signer.Issue("owner", fileID)
 	for _, tc := range []struct {
 		name, url string

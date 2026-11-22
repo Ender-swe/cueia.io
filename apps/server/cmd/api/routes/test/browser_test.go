@@ -1,4 +1,4 @@
-package routes
+package routes_test
 
 import (
 	"net/http"
@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
@@ -21,7 +22,7 @@ func TestBrowserJourney(t *testing.T) {
 		t.Skip("requires an interactive Clerk test login")
 	}
 	store := testWorkspace(t, "sample")
-	dist, err := filepath.Abs("../../../../dashboard/dist")
+	dist, err := filepath.Abs("../../../../../dashboard/dist")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +42,7 @@ func TestBrowserJourney(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	handler := New(s, store, signer)
+	handler := routes.New(s, store, signer)
 	root := http.NewServeMux()
 	root.Handle("/api/", handler)
 	for _, path := range []string{"/workspace", "/sign-in", "/sign-in/", "/sign-up", "/sign-up/"} {
@@ -52,7 +53,7 @@ func TestBrowserJourney(t *testing.T) {
 	server.Start()
 	defer server.Close()
 	cmd := exec.CommandContext(t.Context(), "bun", "run", "journey.ts")
-	cmd.Dir = "../../../../browser-worker"
+	cmd.Dir = "../../../../../browser-worker"
 	cmd.Env = append(os.Environ(), "CUEIA_DASHBOARD_ORIGIN="+origin, "CUEIA_TEST_DEPLOYMENT="+store.Deployment, "CUEIA_TEST_DISKS="+store.Provider.(*providertest.Fixture).Directory)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

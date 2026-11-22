@@ -1,4 +1,4 @@
-package routes
+package routes_test
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
 )
@@ -21,7 +22,7 @@ func TestSessionRoutes(t *testing.T) {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	registerSessions(mux, service)
+	routes.RegisterSessions(mux, service)
 	call := func(method, token string, status int) *httptest.ResponseRecorder {
 		t.Helper()
 		r := httptest.NewRequest(method, "/api/session", nil)

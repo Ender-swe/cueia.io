@@ -1,4 +1,4 @@
-package claim
+package claim_test
 
 import "os"
 

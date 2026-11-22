@@ -1,4 +1,4 @@
-package routes
+package routes_test
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
@@ -55,7 +56,7 @@ func TestWorkspaceHTTP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	handler := New(s, store, signer)
+	handler := routes.New(s, store, signer)
 	alice := uuid.NewString()
 	a := login(t, handler, issuer.Token(t, alice)).Token
 	b := login(t, handler, issuer.Token(t, alice)).Token
@@ -154,7 +155,7 @@ func testWorkspace(t *testing.T, mode string) *workspace.Service {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = database.Migrate(t.Context(), conn.Conn(), os.DirFS("../../../migrations"))
+	err = database.Migrate(t.Context(), conn.Conn(), os.DirFS("../../../../migrations"))
 	conn.Release()
 	if err != nil {
 		t.Fatal(err)

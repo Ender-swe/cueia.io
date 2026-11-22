@@ -1,4 +1,4 @@
-package claim
+package claim_test
 
 import (
 	"bufio"
@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/claim"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/jackc/pgx/v5"
 )
@@ -36,7 +37,7 @@ func TestClaimChild(t *testing.T) {
 	if _, err := io.ReadFull(os.Stdin, release[:]); err != nil {
 		t.Fatal(err)
 	}
-	won, err := AtVersion(ctx, conn, id, version)
+	won, err := claim.AtVersion(ctx, conn, id, version)
 	if err != nil {
 		t.Fatal(err)
 	}

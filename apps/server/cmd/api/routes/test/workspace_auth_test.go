@@ -1,4 +1,4 @@
-package routes
+package routes_test
 
 import (
 	"context"
@@ -6,13 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 )
 
 func TestWorkspaceRoutesRequireSession(t *testing.T) {
 	mux := http.NewServeMux()
-	registerWorkspace(mux, func(context.Context, string) (string, error) { return "", session.ErrUnauthorized }, workspace.NewHandler(nil))
+	routes.RegisterWorkspace(mux, func(context.Context, string) (string, error) { return "", session.ErrUnauthorized }, workspace.NewHandler(nil))
 	for _, route := range []struct{ method, path string }{
 		{"GET", "/api/workspace"}, {"GET", "/api/mail/threads"}, {"GET", "/api/calendar/events"},
 		{"PATCH", "/api/workspace/preferences"}, {"GET", "/api/files"}, {"GET", "/api/files/search"}, {"GET", "/api/files/content"},

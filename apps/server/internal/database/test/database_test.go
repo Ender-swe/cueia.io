@@ -1,4 +1,4 @@
-package database
+package database_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -23,9 +24,9 @@ func TestBootstrapMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer conn.Close(ctx)
-	dir := config.MigrationsDir("../../migrations")
+	dir := config.MigrationsDir("../../../migrations")
 	for range 2 {
-		if err := Migrate(ctx, conn, os.DirFS(dir)); err != nil {
+		if err := database.Migrate(ctx, conn, os.DirFS(dir)); err != nil {
 			t.Fatal(err)
 		}
 	}

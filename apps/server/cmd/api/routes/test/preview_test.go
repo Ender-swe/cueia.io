@@ -1,4 +1,4 @@
-package routes
+package routes_test
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/Ender-swe/cueia.io/apps/server/cmd/api/routes"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
@@ -38,7 +39,7 @@ func TestPreviewAcrossServers(t *testing.T) {
 				return
 			}
 
-			handler := New(s, store, signer)
+			handler := routes.New(s, store, signer)
 			servers[i] = httptest.NewServer(handler)
 		})
 	}

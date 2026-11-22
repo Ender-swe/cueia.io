@@ -8,7 +8,7 @@ import (
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 )
 
-func registerWorkspace(mux *http.ServeMux, authenticate func(context.Context, string) (string, error), h *workspace.Handler) {
+func RegisterWorkspace(mux *http.ServeMux, authenticate func(context.Context, string) (string, error), h *workspace.Handler) {
 	mux.HandleFunc("GET /api/workspace", session.Require(authenticate, h.Snapshot))
 	mux.HandleFunc("GET /api/mail/threads", session.Require(authenticate, h.Threads))
 	mux.HandleFunc("GET /api/calendar/events", session.Require(authenticate, h.Events))
