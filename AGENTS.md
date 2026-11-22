@@ -2,9 +2,43 @@
 
 ## Project Structure
 
-Cueia is in the planning stage. Start with `PROPOSAL-ORDER.md` to find the proposal, its dependencies, and its GitHub issue. Each active change has a directory under `openspec/changes/` containing a `proposal.md`. Accepted specifications belong in `openspec/specs/`, and completed changes go in `openspec/changes/archive/`.
+Start with `PROPOSAL-ORDER.md` to find the proposal, its dependencies, and its GitHub issue. Each active change has a directory under `openspec/changes/` containing a `proposal.md`. Accepted specifications belong in `openspec/specs/`, and completed changes go in `openspec/changes/archive/`.
 
-The bootstrap proposal calls for a TypeScript workspace at the repository root. Cueia application source, tests, and assets have yet to be added. The separate `openfuse/` checkout has its own tooling. Create original Cueia artwork, fixtures, and expected results, and record their provenance.
+The repository root contains the TypeScript workspace. The Go server lives in `apps/server/`. The separate `openfuse/` checkout has its own tooling. Create original Cueia artwork, fixtures, and expected results, and record their provenance.
+
+### Go server file layout
+
+Use the session feature as the template for new Go features. Group private feature code under `internal/<feature>/` and create each file when the feature needs it.
+
+```text
+apps/server/
+  cmd/api/
+    main.go               # Wire dependencies, call routes.New, start and stop the server
+    test/
+      main_test.go
+    routes/
+      routes.go           # Assemble feature routes and apply shared middleware
+      sessions.go         # Bind HTTP methods and paths to handlers with route-specific auth
+      test/
+        routes_test.go
+        sessions_test.go
+  internal/session/
+    session.go            # Define the feature's domain structs, such as Credential
+    handler.go            # Read HTTP requests, call the service, and write responses
+    service.go            # Coordinate session exchange, authentication, and revocation
+    memory.go             # Keep all session database queries here
+    config.go             # Load session-specific configuration
+    test/
+      config_test.go
+      handler_test.go
+      service_test.go
+      memory_test.go
+      issuer.go           # Token issuer used by the session tests
+```
+
+Add endpoints to the owning feature's file in `cmd/api/routes/`. Name the domain struct file after the feature, as in `session/session.go`. For example, `sessions.go` registers `POST /api/session` with `ExchangeHTTP` in `handler.go`. The handler calls `Service.Exchange` in `service.go`, which uses `createSession` in `memory.go` to persist the session.
+
+Put every Go test in the closest `test/` folder to the code it exercises. Create that folder directly under the owning package when needed. This applies to unit and integration tests alike. A session persistence test belongs in `internal/session/test/`, and a session route registration test belongs in `cmd/api/routes/test/`.
 
 ## Development Commands
 
@@ -56,7 +90,7 @@ users:
 
 ## Testing Guidelines
 
-Use the proposal’s acceptance scenarios as the basis for tests. For bootstrap, sign in twice, change a preference, restart the API, and verify that record IDs, attachment bytes, and the preference survive. Revoke one session and verify that only the other retains access. Cueia has yet to establish a test framework, filename convention, or coverage threshold.
+Use the proposal’s acceptance scenarios as the basis for tests. For bootstrap, sign in twice, change a preference, restart the API, and verify that record IDs, attachment bytes, and the preference survive. Revoke one session and verify that only the other retains access.
 
 ## Commits and Pull Requests
 
