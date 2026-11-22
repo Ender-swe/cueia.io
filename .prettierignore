@@ -8,3 +8,4 @@ dist/
 .codex/
 openfuse/
 vendor/
+packages/api-types/src/contract.ts
