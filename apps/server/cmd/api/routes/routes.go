@@ -29,10 +29,9 @@ func New(sessions *session.Service, store *workspace.Service, signer document.Si
 	RegisterSessions(mux, sessions)
 	RegisterWorkspace(mux, sessions.Authenticate, workspace.NewHandler(store))
 	RegisterDocuments(mux, sessions.Authenticate, document.NewHandler(store, signer))
-	const prefix = "/api"
 	root := http.NewServeMux()
-	root.Handle(prefix+"/", http.StripPrefix(prefix, mux))
-	return sessions.Protect(root, middleware.NewLimiter(), prefix+sessionPath)
+	root.Handle("/api/", http.StripPrefix("/api", mux))
+	return sessions.Protect(root, middleware.NewLimiter(), "/api/session")
 }
 
 func RegisterStatus(mux *http.ServeMux, authenticate func(context.Context, string) (string, error), providers []OptionalProvider) {
