@@ -60,7 +60,7 @@ docker compose --env-file /path/to/deployment.env -f compose.yaml up -d --build 
 
 Compose waits for healthy PostgreSQL and a successful migration before starting the API and worker. Each mode has its own Compose project and database volume. Set distinct `CUEIA_PORT` values when running both modes at once.
 
-The production workspace provider target is Azure. The internal provider fixture stores each test workspace in its own temporary disk directory. Its tests cover a lost allocation response, a fresh provider instance recovering the binding, rejection of foreign machine and disk references, and replacement retaining the original bytes. Run them from `apps/server/` with `go test ./internal/workspace/provider/...`.
+The production workspace provider target is Azure. The internal provider fixture stores each test workspace in its own temporary disk directory. Its allocation and replacement test covers a lost allocation response, a fresh provider instance recovering the binding, rejection of foreign machine and disk references, and replacement retaining the original bytes. Run it from `apps/server/` with `go test -v ./internal/workspace/test -run '^TestAllocationAndReplacement$'`.
 
 ### Azure workspace provider
 
