@@ -1,6 +1,7 @@
-package providertest
+package workspace_test
 
 import (
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 	"os"
 	"testing"
 
@@ -15,13 +16,9 @@ func TestReplaceAcceptanceMachine(t *testing.T) {
 	if dir == "" || workspace == "" {
 		t.Skip("requires a disposable workspace to replace")
 	}
-	f := Fixture{Directory: dir}
+	f := providertest.Fixture{Directory: dir}
 	owner := provider.Owner{Deployment: os.Getenv("COMPOSE_PROJECT_NAME"), Workspace: workspace}
-	allocation, err := f.ownerDir(owner)
-	if err != nil {
-		t.Fatal(err)
-	}
-	old, err := readBinding(allocation)
+	old, err := f.Lookup(owner)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,7 +1,8 @@
-package providertest
+package workspace_test
 
 import (
 	"errors"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 	"io/fs"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 
 func TestAllocationAndReplacement(t *testing.T) {
 	ctx := t.Context()
-	f := &Fixture{Directory: t.TempDir()}
+	f := &providertest.Fixture{Directory: t.TempDir()}
 	a := provider.Owner{Deployment: "sample", Workspace: "alice"}
 	b := provider.Owner{Deployment: "sample", Workspace: "bob"}
 	var created provider.Machine
@@ -18,7 +19,7 @@ func TestAllocationAndReplacement(t *testing.T) {
 	if _, err := f.FindOrAllocate(ctx, a); err == nil {
 		t.Fatal("expected lost response")
 	}
-	f = &Fixture{Directory: f.Directory}
+	f = &providertest.Fixture{Directory: f.Directory}
 	ma, err := f.FindOrAllocate(ctx, a)
 	if err != nil || ma != created {
 		t.Fatalf("retry: %v %v", ma, err)

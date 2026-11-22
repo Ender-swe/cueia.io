@@ -1,11 +1,11 @@
-package workspace
+package workspace_test
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+
 	"io/fs"
 	"net/url"
 	"os"
@@ -19,6 +19,7 @@ import (
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/sample"
@@ -28,7 +29,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func testService(t *testing.T) *Service {
+func testService(t *testing.T) *workspace.Service {
 	t.Helper()
 	url := os.Getenv("CUEIA_TEST_DATABASE_URL")
 	if url == "" {
@@ -44,13 +45,61 @@ func testService(t *testing.T) *Service {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = database.Migrate(ctx, c.Conn(), os.DirFS("../../migrations"))
+	err = database.Migrate(ctx, c.Conn(), os.DirFS("../../../migrations"))
 	c.Release()
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &Service{db, &providertest.Fixture{Directory: t.TempDir()}, "test-" + uuid.NewString(), "internal", "local", "sample"}
+	return &workspace.Service{DB: db, Provider: &providertest.Fixture{Directory: t.TempDir()}, Deployment: "test-" + uuid.NewString(), ProviderName: "internal", Region: "local", Mode: "sample"}
 }
+func openDisk(t *testing.T, s *workspace.Service, w string) *volume.Store {
+	t.Helper()
+	owner := provider.Owner{Deployment: s.Deployment, Workspace: w}
+	fixture := s.Provider.(*providertest.Fixture)
+	machine, err := fixture.Lookup(owner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	disk, err := fixture.Open(t.Context(), owner, machine)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return disk.(*volume.Store)
+}
+
+type interruptedProvider struct {
+	provider.Provider
+	interrupt func(string) error
+}
+
+func (p interruptedProvider) Open(ctx context.Context, owner provider.Owner, machine provider.Machine) (provider.Filesystem, error) {
+	disk, err := p.Provider.Open(ctx, owner, machine)
+	if err == nil {
+		disk.(*volume.Store).Interrupt = p.interrupt
+	}
+	return disk, err
+}
+
+// Cancel registration after PostgreSQL inserts the file row but before commit.
+type cancelAfterFileInsert struct {
+	cancel context.CancelFunc
+}
+
+func (tr cancelAfterFileInsert) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
+	if strings.HasPrefix(data.SQL, "INSERT INTO files(") {
+		return context.WithValue(ctx, insertMarker{}, true)
+	}
+	return ctx
+}
+
+type insertMarker struct{}
+
+func (tr cancelAfterFileInsert) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryEndData) {
+	if ctx.Value(insertMarker{}) == true && data.Err == nil {
+		tr.cancel()
+	}
+}
+
 func TestPublicationRecovery(t *testing.T) {
 	s := testService(t)
 	ctx := t.Context()
@@ -58,59 +107,67 @@ func TestPublicationRecovery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	disk, err := s.open(ctx, w)
-	if err != nil {
-		t.Fatal(err)
-	}
+	disk := openDisk(t, s, w)
 	defer disk.Close()
-	d := disk.(*volume.Store)
-	if err = d.WriteFile("keep.txt", []byte("ordinary"), 0600); err != nil {
+	if err := disk.WriteFile("keep.txt", []byte("ordinary"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	for _, point := range []string{"staging", "published", "metadata"} {
 		t.Run(point, func(t *testing.T) {
 			name := point + ".pdf"
-			d.Interrupt = func(boundary string) error {
-				if point == boundary {
-					return errors.New("interrupted")
-				}
-				return nil
+			if err := disk.WriteFile(name, sample.PDF, 0600); err != nil {
+				t.Fatal(err)
 			}
-			err := pgx.BeginFunc(ctx, s.DB, func(tx pgx.Tx) error {
-				_, err := publish(ctx, tx, w, d, name, "application/pdf", sample.PDF)
-				if err == nil {
-					return errors.New("simulate rollback before commit")
+			attempt := *s
+			registerCtx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			interrupted := errors.New("interrupted publication")
+			if point == "metadata" {
+				cfg := s.DB.Config()
+				cfg.ConnConfig.Tracer = cancelAfterFileInsert{cancel}
+				pool, err := pgxpool.NewWithConfig(ctx, cfg)
+				if err != nil {
+					t.Fatal(err)
 				}
-				return err
-			})
-			if err == nil {
-				t.Fatal("interruption returned success")
+				defer pool.Close()
+				attempt.DB = pool
+			} else {
+				attempt.Provider = interruptedProvider{s.Provider, func(boundary string) error {
+					if boundary == point {
+						return interrupted
+					}
+					return nil
+				}}
 			}
-			var n int
-			if err = s.DB.QueryRow(ctx, "SELECT count(*) FROM files WHERE workspace_id=$1 AND filename=$2", w, name).Scan(&n); err != nil || n != 0 {
-				t.Fatal(n, err)
+			_, err := attempt.RegisterFileVersion(registerCtx, w, name, "application/pdf", nil)
+			if point == "metadata" {
+				if err == nil || registerCtx.Err() == nil {
+					t.Fatalf("expected interrupted commit, got %v", err)
+				}
+			} else if !errors.Is(err, interrupted) {
+				t.Fatalf("expected %s interruption, got %v", point, err)
+			}
+			var count int
+			if err := s.DB.QueryRow(ctx, "SELECT count(*) FROM files WHERE workspace_id=$1 AND filename=$2", w, name).Scan(&count); err != nil || count != 0 {
+				t.Fatal(count, err)
+			}
+			if err := disk.Remove(name); err != nil {
+				t.Fatal(err)
 			}
 			entries, err := s.Files(ctx, w, ".", name)
 			if err != nil || len(entries) != 0 {
 				t.Fatal(entries, err)
 			}
-			d.Interrupt = nil
-			if err = d.Reconcile(); err != nil {
+			if err := disk.WriteFile(name, sample.PDF, 0600); err != nil {
 				t.Fatal(err)
 			}
-			var first string
-			for range 2 {
-				err = pgx.BeginFunc(ctx, s.DB, func(tx pgx.Tx) error {
-					id, err := publish(ctx, tx, w, d, name, "application/pdf", sample.PDF)
-					if first != "" && id != first {
-						return fmt.Errorf("file ID changed")
-					}
-					first = id
-					return err
-				})
-				if err != nil {
-					t.Fatal(err)
-				}
+			first, err := s.RegisterFileVersion(ctx, w, name, "application/pdf", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			second, err := s.RegisterFileVersion(ctx, w, name, "application/pdf", nil)
+			if err != nil || second != first {
+				t.Fatal("registration retry", second, err)
 			}
 			got, err := s.ReadFileVersion(ctx, w, first)
 			if err != nil || !bytes.Equal(got, sample.PDF) {
@@ -118,7 +175,7 @@ func TestPublicationRecovery(t *testing.T) {
 			}
 		})
 	}
-	got, err := fs.ReadFile(d, "keep.txt")
+	got, err := fs.ReadFile(disk, "keep.txt")
 	if err != nil || string(got) != "ordinary" {
 		t.Fatal("ordinary file lost", err)
 	}
@@ -136,12 +193,8 @@ func TestStorageIsolation(t *testing.T) {
 	}
 	var fileID string
 	for _, w := range []string{alice, bob} {
-		d, err := s.open(ctx, w)
-		if err != nil {
-			t.Fatal(err)
-		}
-		local := d.(*volume.Store)
-		if err = local.Mkdir("reports", 0700); err != nil {
+		d := openDisk(t, s, w)
+		if err = d.Mkdir("reports", 0700); err != nil {
 			t.Fatal(err)
 		}
 		if err = d.WriteFile("reports/activity.csv", []byte(w), 0600); err != nil {
@@ -154,7 +207,7 @@ func TestStorageIsolation(t *testing.T) {
 		if err = os.WriteFile(outside, []byte("foreign"), 0600); err != nil {
 			t.Fatal(err)
 		}
-		if err = os.Symlink(outside, filepath.Join(local.Name(), "escape")); err != nil {
+		if err = os.Symlink(outside, filepath.Join(d.Name(), "escape")); err != nil {
 			t.Fatal(err)
 		}
 		for _, p := range []string{"escape", "../foreign"} {
@@ -270,7 +323,7 @@ func TestLiveProvisioningUsesSeparateDisk(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = database.Migrate(ctx, c.Conn(), os.DirFS("../../migrations"))
+	err = database.Migrate(ctx, c.Conn(), os.DirFS("../../../migrations"))
 	c.Release()
 	if err != nil {
 		t.Fatal(err)
@@ -364,11 +417,8 @@ func TestDirectWritesAndPreview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	disk, err := s.open(ctx, w)
-	if err != nil {
-		t.Fatal(err)
-	}
-	root := disk.(*volume.Store).Name()
+	disk := openDisk(t, s, w)
+	root := disk.Name()
 	disk.Close()
 	countFiles := func() int {
 		t.Helper()
@@ -392,7 +442,7 @@ func TestDirectWritesAndPreview(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !slices.ContainsFunc(entries, func(e Entry) bool { return e.Path == name }) {
+		if !slices.ContainsFunc(entries, func(e workspace.Entry) bool { return e.Path == name }) {
 			t.Fatal("refresh missed", name)
 		}
 		entries, err = s.Files(ctx, w, ".", path.Base(name))

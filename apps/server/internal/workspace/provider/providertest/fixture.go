@@ -67,6 +67,17 @@ func saveBinding(dir string, m provider.Machine) error {
 	return os.Rename(file.Name(), filepath.Join(dir, "machine.json"))
 }
 
+// Lookup reads an existing binding without allocating a machine.
+func (f *Fixture) Lookup(owner provider.Owner) (provider.Machine, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	dir, err := f.ownerDir(owner)
+	if err != nil {
+		return provider.Machine{}, err
+	}
+	return readBinding(dir)
+}
+
 func (f *Fixture) FindOrAllocate(ctx context.Context, owner provider.Owner) (provider.Machine, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

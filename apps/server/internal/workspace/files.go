@@ -11,12 +11,6 @@ import (
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 )
 
-type Entry struct {
-	Path string `json:"path"`
-	Name string `json:"name"`
-	Kind string `json:"kind"`
-}
-
 // Keep ordinary entries visible even when the owner creates a file or directory named Attachments.
 func attachmentDirectory(d provider.Filesystem) (string, error) {
 	entries, err := fs.ReadDir(d, ".")
@@ -58,27 +52,19 @@ func (s *Service) entries(ctx context.Context, w, dir string, d provider.Filesys
 		byName[e.Name()] = Entry{path.Join(dir, e.Name()), e.Name(), kind}
 	}
 	if dir == "." || dir == managed {
-		rows, err := s.DB.Query(ctx, `SELECT DISTINCT f.filename, f.storage_key FROM files f JOIN mail_attachments a ON (a.workspace_id,a.file_id)=(f.workspace_id,f.id) WHERE f.workspace_id=$1`, w)
+		attachments, err := s.listAttachments(ctx, w)
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
-		for rows.Next() {
-			var name, key string
-			if err = rows.Scan(&name, &key); err != nil {
-				return nil, err
-			}
-			if _, err := d.ReadVersion(key); err != nil {
+		for _, attachment := range attachments {
+			if _, err := d.ReadVersion(attachment.Key); err != nil {
 				return nil, err
 			}
 			if dir == "." {
 				byName[managed] = Entry{managed, managed, "directory"}
 			} else {
-				byName[name] = Entry{path.Join(dir, name), name, "file"}
+				byName[attachment.Name] = Entry{path.Join(dir, attachment.Name), attachment.Name, "file"}
 			}
-		}
-		if err = rows.Err(); err != nil {
-			return nil, err
 		}
 	}
 	if dir == managed && len(byName) == 0 {
@@ -91,6 +77,7 @@ func (s *Service) entries(ctx context.Context, w, dir string, d provider.Filesys
 	sort.Slice(result, func(i, j int) bool { return result[i].Name < result[j].Name })
 	return result, nil
 }
+
 func (s *Service) Files(ctx context.Context, w, dir, search string) ([]Entry, error) {
 	if dir == "" {
 		dir = "."
@@ -129,6 +116,7 @@ func (s *Service) Files(ctx context.Context, w, dir, search string) ([]Entry, er
 	err = visit(dir)
 	return found, err
 }
+
 func (s *Service) Read(ctx context.Context, w, name string) ([]byte, error) {
 	if !fs.ValidPath(name) || name == "." {
 		return nil, fs.ErrInvalid
