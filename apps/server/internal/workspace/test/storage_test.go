@@ -17,6 +17,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
@@ -31,7 +32,7 @@ import (
 
 func testService(t *testing.T) *workspace.Service {
 	t.Helper()
-	url := os.Getenv("CUEIA_TEST_DATABASE_URL")
+	url := config.TestDatabaseURL()
 	if url == "" {
 		t.Skip("requires CUEIA_TEST_DATABASE_URL")
 	}

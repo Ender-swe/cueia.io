@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
@@ -21,7 +20,7 @@ import (
 
 func run(ctx context.Context) error {
 
-	settings, configErr := config.LoadAPI()
+	settings, configErr := loadAPIConfig()
 
 	db, err := openDatabase(ctx, settings.DatabaseURL)
 	if err != nil {
@@ -64,7 +63,7 @@ func run(ctx context.Context) error {
 
 	server := &http.Server{Addr: settings.Addr, Handler: sessions.Protect(mux, middleware.NewLimiter()), ReadHeaderTimeout: 5 * time.Second}
 	done := make(chan error, 1)
-	
+
 	go func() { done <- server.ListenAndServe() }()
 	select {
 	case err := <-done:

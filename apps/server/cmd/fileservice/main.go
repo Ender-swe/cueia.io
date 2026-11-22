@@ -8,11 +8,7 @@ import (
 )
 
 func main() {
-	dir := os.Getenv("CUEIA_DISK_MOUNT")
-	if dir == "" {
-		dir = "/srv/cueia"
-	}
-	s, err := volume.Open(dir)
+	s, err := volume.Open(diskMount())
 	if err != nil {
 		log.Fatal(err)
 	}

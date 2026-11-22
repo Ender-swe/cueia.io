@@ -10,18 +10,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/jackc/pgx/v5"
 )
 
 // The child reads the candidate before signalling readiness. Its parent
 // releases both children only after they have reported the expected version.
 func TestClaimChild(t *testing.T) {
-	id := os.Getenv("CUEIA_TEST_CLAIM_ID")
+	id := testClaimID()
 	if id == "" {
 		t.Skip("child of TestCompetingClaimProcesses")
 	}
 	ctx := t.Context()
-	conn, err := pgx.Connect(ctx, os.Getenv("CUEIA_TEST_DATABASE_URL"))
+	conn, err := pgx.Connect(ctx, config.TestDatabaseURL())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +44,7 @@ func TestClaimChild(t *testing.T) {
 }
 
 func TestCompetingClaimProcesses(t *testing.T) {
-	dsn := os.Getenv("CUEIA_TEST_DATABASE_URL")
+	dsn := config.TestDatabaseURL()
 	if dsn == "" {
 		t.Skip("requires migrated CUEIA_TEST_DATABASE_URL")
 	}

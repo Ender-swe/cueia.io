@@ -2,7 +2,6 @@ package workspace_test
 
 import (
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
-	"os"
 	"testing"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
@@ -11,13 +10,12 @@ import (
 // TestReplaceAcceptanceMachine operates on the internal provider's disposable
 // disk directory while the sample API is stopped during the recovery check.
 func TestReplaceAcceptanceMachine(t *testing.T) {
-	dir := os.Getenv("CUEIA_TEST_DISK_DIR")
-	workspace := os.Getenv("CUEIA_TEST_REPLACE_WORKSPACE")
-	if dir == "" || workspace == "" {
+	settings := loadRecoveryConfig()
+	if settings.diskDir == "" || settings.workspace == "" {
 		t.Skip("requires a disposable workspace to replace")
 	}
-	f := providertest.Fixture{Directory: dir}
-	owner := provider.Owner{Deployment: os.Getenv("COMPOSE_PROJECT_NAME"), Workspace: workspace}
+	f := providertest.Fixture{Directory: settings.diskDir}
+	owner := provider.Owner{Deployment: settings.deployment, Workspace: settings.workspace}
 	old, err := f.Lookup(owner)
 	if err != nil {
 		t.Fatal(err)

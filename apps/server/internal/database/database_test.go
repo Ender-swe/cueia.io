@@ -6,13 +6,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // Point CUEIA_TEST_DATABASE_URL at an empty, disposable PostgreSQL database.
 func TestBootstrapMigration(t *testing.T) {
-	url := os.Getenv("CUEIA_TEST_DATABASE_URL")
+	url := config.TestDatabaseURL()
 	if url == "" {
 		t.Skip("requires CUEIA_TEST_DATABASE_URL")
 	}
@@ -22,10 +23,7 @@ func TestBootstrapMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer conn.Close(ctx)
-	dir := os.Getenv("MIGRATIONS_DIR")
-	if dir == "" {
-		dir = "../../migrations"
-	}
+	dir := config.MigrationsDir("../../migrations")
 	for range 2 {
 		if err := Migrate(ctx, conn, os.DirFS(dir)); err != nil {
 			t.Fatal(err)

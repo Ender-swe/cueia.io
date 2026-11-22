@@ -5,16 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/jackc/pgx/v5"
 )
 
 func Open(ctx context.Context) (*pgx.Conn, error) {
-	url := os.Getenv("DATABASE_URL")
+	url := config.DatabaseURL()
 	if url == "" {
 		return nil, errors.New("DATABASE_URL is required")
 	}

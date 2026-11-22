@@ -17,7 +17,7 @@ import (
 // TestBrowserJourney serves the production dashboard and API on one loopback
 // origin. The developer signs into the existing Clerk test instance in Chromium.
 func TestBrowserJourney(t *testing.T) {
-	issuer := os.Getenv("CUEIA_BROWSER_CLERK_ISSUER")
+	issuer := browserClerkIssuer()
 	if issuer == "" {
 		t.Skip("requires an interactive Clerk test login")
 	}

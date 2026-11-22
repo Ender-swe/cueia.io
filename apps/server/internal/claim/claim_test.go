@@ -2,14 +2,14 @@ package claim
 
 import (
 	"context"
-	"os"
 	"testing"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/jackc/pgx/v5"
 )
 
 func TestClaimAtVersion(t *testing.T) {
-	url := os.Getenv("CUEIA_TEST_DATABASE_URL")
+	url := config.TestDatabaseURL()
 	if url == "" {
 		t.Skip("requires migrated CUEIA_TEST_DATABASE_URL")
 	}

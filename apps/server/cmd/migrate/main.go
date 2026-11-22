@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 )
 
@@ -16,10 +17,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 	defer conn.Close(ctx)
-	dir := os.Getenv("MIGRATIONS_DIR")
-	if dir == "" {
-		dir = "migrations"
-	}
+	dir := config.MigrationsDir("migrations")
 	return database.Migrate(ctx, conn, os.DirFS(dir))
 }
 

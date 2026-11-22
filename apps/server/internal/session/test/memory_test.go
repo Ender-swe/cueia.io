@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session/test"
@@ -156,7 +157,7 @@ func TestStoredSessions(t *testing.T) {
 
 func testWorkspace(t *testing.T, mode string) *workspace.Service {
 	t.Helper()
-	dsn := os.Getenv("CUEIA_TEST_DATABASE_URL")
+	dsn := config.TestDatabaseURL()
 	if dsn == "" {
 		t.Skip("requires CUEIA_TEST_DATABASE_URL")
 	}
