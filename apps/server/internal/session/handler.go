@@ -20,6 +20,11 @@ func NewHandler(sessions *Service) *Handler {
 	return &Handler{sessions: sessions}
 }
 
+func (h *Handler) Register(mux *http.ServeMux) {
+	mux.HandleFunc("POST /api/session", h.ExchangeHTTP)
+	mux.HandleFunc("DELETE /api/session", Require(h.sessions.Authenticate, h.RevokeHTTP))
+}
+
 func (h *Handler) ExchangeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json")

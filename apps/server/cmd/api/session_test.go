@@ -91,7 +91,7 @@ func TestSessionExchange(t *testing.T) {
 			store := testWorkspace(t, mode)
 			s := session.NewService(store.DB, session.Clerk(t.Context(), "https://issuer.invalid", "https://cueia.invalid"), store.Provision)
 			mux := http.NewServeMux()
-			mux.HandleFunc("POST /api/session", session.NewHandler(s).ExchangeHTTP)
+			session.NewHandler(s).Register(mux)
 			for _, token := range []string{"", "malformed"} {
 				if request(mux, "POST", "/api/session", token, "").Code != 401 {
 					t.Fatal("invalid credential accepted")

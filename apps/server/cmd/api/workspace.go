@@ -42,9 +42,7 @@ func workspaceRoutes(mux *http.ServeMux, sessions *session.Service, store *works
 	private := func(pattern string, handler session.OwnerHandler) {
 		mux.HandleFunc(pattern, session.Require(sessions.Authenticate, handler))
 	}
-	handler := session.NewHandler(sessions)
-	mux.HandleFunc("POST /api/session", handler.ExchangeHTTP)
-	private("DELETE /api/session", handler.RevokeHTTP)
+	session.NewHandler(sessions).Register(mux)
 	private("GET /api/workspace", func(w http.ResponseWriter, r *http.Request, owner string) {
 		v, err := store.Snapshot(r.Context(), owner)
 		result(w, v, err)
