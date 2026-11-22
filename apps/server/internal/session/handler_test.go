@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/middleware"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/testutil"
 )
 
 func TestOriginAndRateLimit(t *testing.T) {
@@ -53,8 +52,8 @@ func TestOriginAndRateLimit(t *testing.T) {
 }
 
 func TestSessionRoutes(t *testing.T) {
-	store := testutil.Workspace(t, "sample")
-	service := NewService(store.DB, func(_ context.Context, token string) (string, error) {
+	store := testWorkspace(t, "sample")
+	service := NewServiceWithVerifier(store.DB, func(_ context.Context, token string) (string, error) {
 		if token != "clerk-fixture" {
 			return "", errors.New("invalid credential")
 		}

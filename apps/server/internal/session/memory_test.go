@@ -1,4 +1,4 @@
-package session_test
+package session
 
 import (
 	"context"
@@ -11,22 +11,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/testutil"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
+	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/provider/providertest"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestFirstExchangesRecover(t *testing.T) {
-	s := testutil.Workspace(t, "sample")
+	s := testWorkspace(t, "sample")
 	f := s.Provider.(*providertest.Fixture)
 	ctx := t.Context()
 	sub := "first-" + uuid.NewString()
 	f.AfterAllocate = func(provider.Machine) error { return errors.New("lost response") }
 	verify := func(_ context.Context, token string) (string, error) { return token, nil }
-	sessions := session.NewService(s.DB, verify, s.Provision)
+	sessions := NewServiceWithVerifier(s.DB, verify, s.Provision)
 	if _, err := sessions.Exchange(ctx, sub); err == nil {
 		t.Fatal("expected interruption")
 	}
@@ -54,7 +55,7 @@ func TestFirstExchangesRecover(t *testing.T) {
 		t.Fatal(err)
 	}
 	start := make(chan struct{})
-	var creds [2]session.Credential
+	var creds [2]Credential
 	var errs [2]error
 	var wg sync.WaitGroup
 	for i := range creds {
@@ -86,10 +87,10 @@ func TestFirstExchangesRecover(t *testing.T) {
 func TestStoredSessions(t *testing.T) {
 	for _, mode := range []string{"sample", "live"} {
 		t.Run(mode, func(t *testing.T) {
-			store := testutil.Workspace(t, mode)
-			s := session.NewService(store.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, store.Provision)
+			store := testWorkspace(t, mode)
+			s := NewServiceWithVerifier(store.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, store.Provision)
 			ctx := t.Context()
-			login := func(sub string) session.Credential {
+			login := func(sub string) Credential {
 				t.Helper()
 				c, err := s.Exchange(ctx, sub)
 				if err != nil {
@@ -102,7 +103,7 @@ func TestStoredSessions(t *testing.T) {
 			if a.Token == b.Token {
 				t.Fatal("repeated session credential")
 			}
-			owner := func(c session.Credential) string {
+			owner := func(c Credential) string {
 				t.Helper()
 				w, err := s.Authenticate(ctx, c.Token)
 				if err != nil {
@@ -113,7 +114,7 @@ func TestStoredSessions(t *testing.T) {
 			if owner(a) != owner(b) || owner(a) == owner(other) {
 				t.Fatal("incorrect workspace ownership")
 			}
-			for _, c := range []session.Credential{a, b, other} {
+			for _, c := range []Credential{a, b, other} {
 				digest := sha256.Sum256([]byte(c.Token))
 				var expires time.Time
 				if err := store.DB.QueryRow(ctx, "SELECT expires_at FROM sessions WHERE token_digest=$1", digest[:]).Scan(&expires); err != nil || !expires.Equal(c.ExpiresAt) {
@@ -137,4 +138,44 @@ func TestStoredSessions(t *testing.T) {
 			owner(other)
 		})
 	}
+}
+
+func testWorkspace(t *testing.T, mode string) *workspace.Service {
+	t.Helper()
+	dsn := os.Getenv("CUEIA_TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("requires CUEIA_TEST_DATABASE_URL")
+	}
+	db, err := pgxpool.New(t.Context(), dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	schema := "api_test_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	if _, err = db.Exec(t.Context(), "CREATE SCHEMA "+schema); err != nil {
+		t.Fatal(err)
+	}
+	admin := db
+	t.Cleanup(func() {
+		if _, err := admin.Exec(context.Background(), "DROP SCHEMA "+schema+" CASCADE"); err != nil {
+			t.Error(err)
+		}
+	})
+	config := db.Config()
+	config.ConnConfig.RuntimeParams["search_path"] = schema
+	db, err = pgxpool.NewWithConfig(t.Context(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	conn, err := db.Acquire(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = database.Migrate(t.Context(), conn.Conn(), os.DirFS("../../migrations"))
+	conn.Release()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &workspace.Service{DB: db, Provider: &providertest.Fixture{Directory: t.TempDir()}, Deployment: uuid.NewString(), ProviderName: "internal", Region: "local", Mode: mode}
 }

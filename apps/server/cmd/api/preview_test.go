@@ -12,14 +12,13 @@ import (
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/document"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/session"
-	"github.com/Ender-swe/cueia.io/apps/server/internal/testutil"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/workspace/sample"
 	"github.com/google/uuid"
 )
 
 func TestPreviewAcrossServers(t *testing.T) {
-	store := testutil.Workspace(t, "sample")
-	s := session.NewService(store.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, store.Provision)
+	store := testWorkspace(t, "sample")
+	s := session.NewServiceWithVerifier(store.DB, func(_ context.Context, sub string) (string, error) { return sub, nil }, store.Provision)
 	var servers [2]*httptest.Server
 	var errs [2]error
 	start := make(chan struct{})

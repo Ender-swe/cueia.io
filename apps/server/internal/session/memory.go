@@ -16,7 +16,7 @@ type Service struct {
 	provision func(context.Context, string) (string, error)
 }
 
-func NewService(db *pgxpool.Pool, verify VerifyFunc, provision func(context.Context, string) (string, error)) *Service {
+func NewServiceWithVerifier(db *pgxpool.Pool, verify VerifyFunc, provision func(context.Context, string) (string, error)) *Service {
 	return &Service{db: db, verify: verify, provision: provision}
 }
 

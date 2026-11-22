@@ -1,20 +1,41 @@
 package session
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/go-jose/go-jose/v4"
-	"github.com/go-jose/go-jose/v4/jwt"
 )
 
-func TestClerk(t *testing.T) {
+func TestVerify(t *testing.T) {
+	s := NewServiceWithVerifier(nil, func(_ context.Context, token string) (string, error) {
+		switch token {
+		case "":
+			t.Fatal("empty token reached verifier")
+		case "valid":
+			return "user_123", nil
+		}
+		return "", errors.New("verification failed")
+	}, nil)
+
+	for _, token := range []string{"", "invalid"} {
+		if sub, err := s.Verify(t.Context(), token); sub != "" || !errors.Is(err, ErrUnauthorized) {
+			t.Errorf("Verify(%q) = (%q, %v), want empty subject and ErrUnauthorized", token, sub, err)
+		}
+	}
+	if sub, err := s.Verify(t.Context(), "valid"); sub != "user_123" || err != nil {
+		t.Errorf("Verify(valid) = (%q, %v), want user_123 and nil", sub, err)
+	}
+}
+
+func TestClerkServiceVerify(t *testing.T) {
 	newKey := func() *rsa.PrivateKey {
 		t.Helper()
 		key, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -35,7 +56,7 @@ func TestClerk(t *testing.T) {
 	issuer := httptest.NewServer(mux)
 	defer issuer.Close()
 	const origin = "https://dashboard.example"
-	verify := Clerk(t.Context(), issuer.URL+"/", origin)
+	service := NewService(t.Context(), nil, Config{ClerkIssuer: issuer.URL + "/", AuthorizedParty: origin}, nil)
 	for _, tc := range []struct {
 		name, issuer, party, sid, sub string
 		key                           *rsa.PrivateKey
@@ -60,7 +81,7 @@ func TestClerk(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			sub, err := verify(t.Context(), token)
+			sub, err := service.Verify(t.Context(), token)
 			if tc.valid {
 				if sub != tc.sub || err != nil {
 					t.Fatalf("valid token: subject %q, error %v", sub, err)
