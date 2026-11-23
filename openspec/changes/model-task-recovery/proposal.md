@@ -2,46 +2,43 @@
 
 ## Why
 
-An owner can leave a job running, respond when it needs input, and recover its result after a worker stops. The task ID in Activity must remain usable through every transition.
+An owner should be able to leave a delegated job running, stop or pause it, and recover its progress after a worker stops. Its result or failure must return to the chat it belongs to, with the same task ID available after reopening the app.
 
 ## What Changes
 
-### Task record and transitions
-
-Create each task in the workspace resolved from the owner's session. Save its ID, request, type, source thread or file, initial plan, and queued state before acknowledging immediate work. For a future reminder, commit the scheduled state and due time together and return the saved ID and time to chat. The Tasks panel reads Scheduled tasks and Today's activity from these persisted records. [Bootstrap chat workspace](../archive/2026-11-22-bootstrap/design.md#chat-files-and-tasks)
-
-Persist attempts with their original start time, progress, evidence IDs, input answers, checkpoint, and outcome. Expose create, inspect, answer, pause, resume, cancel, and eligible retry operations. Task detail must explain what work is due, what input or review is outstanding, and where to open its result.
-
-| Current state               | Event                                   | Result                                                                                                             |
-| --------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Queued or due scheduled     | Worker wins claim                       | Running with an attempt and expiring lease                                                                         |
-| Running                     | Needs information or approval           | Save checkpoint and input request or review ID, release lease, and wait                                            |
-| Waiting for input or review | Valid answer or ledger decision arrives | Resume from saved context and settle or continue according to the decision                                         |
-| Running                     | Next observation due later              | Save progress, due time, and scheduled state                                                                       |
-| Eligible active task        | Owner pauses or cancels                 | Invalidate the lease. Pause retains progress for resume. Cancellation ends eligibility and closes pending reviews. |
-| Running                     | Handler finishes or exhausts retries    | Save evidence and a succeeded or failed outcome. Publish terminal status with its result or error.                 |
-
-### Worker behavior
-
-Run the scheduler in-process or from `apps/server/cmd/worker`. Extend bootstrap's version-checked PostgreSQL claim through `pgx` to test status and due time and acquire a unique lease token and expiry in the winning update. Renew the lease during long work. A worker losing the lease must discard stale progress. Check ownership of the lease at each durable write and before starting an effect. For an already-dispatched external write, reconcile the stored review and receipt. Cancellation cannot retract an effect already accepted by a provider. [Bootstrap claim](../archive/2026-11-22-bootstrap/design.md#make-the-claim-decision-in-postgresql)
-
-Store reusable file, review, and result IDs under a stable operation identity. Resolve file inputs and outputs through the task's permanent workspace ID and the [bootstrap file service](../archive/2026-11-22-bootstrap/design.md#resolve-workspace-ownership-at-the-storage-boundary). A recovering worker can run on a different host and reopen the same registered file on the owner's disk. Recover an expired attempt from its last durable checkpoint and reconcile effects recorded after that checkpoint. Limit concurrent jobs while allowing unrelated jobs to progress during slow work or review. A paused task becomes eligible only on an explicit resume. A future scheduled task stays idle until due.
+- Persist owner-bound tasks, execution attempts, versioned checkpoints, accepted answers, operation identities, and outcomes before acknowledging changes. Reuse the existing document service for registered PDF versions and reads; keep execution metadata in PostgreSQL.
+- Extend the bootstrap version-checked claim into an expiring, renewable worker lease. Recover interrupted work on another host, reject stale writes, and keep unrelated jobs moving while a task waits for input or review.
+- Automatically retry safe transient failures with backoff within a persisted two-minute recovery budget. Exclude scheduled, paused, and input/review waiting time. Exhaustion produces a saved failure message; an explicit restart after failure or task expiry creates another execution under the same task ID.
+- Add create, list, inspect, answer, pause, resume, cancel, and restart operations. Reject late answers while paused or cancelled, retain already accepted progress, and close pending reviews on cancellation. Lease expiry recovers automatically; review expiry never grants permission to act.
+- Add a visible **Stop task** button in the associated message input. It cancels the selected durable task; stopping an ordinary chat turn retains its separate meaning. Tasks and Activity show persisted state and link to the result.
+- Persist a task's destination conversation at creation. Publish its result or failure exactly once per execution to that conversation, using Main chat only when no originating chat was supplied. Commit the outcome and pending delivery together, recover delivery after restart, and replay messages when the chat reopens.
+- Establish the minimum durable conversation identity and task-message read path needed for this delivery. Later conversation history adopts these IDs and message identities rather than creating another Main chat or duplicating results.
+- Save mutation responses with workspace-scoped request keys so a lost response can be replayed without repeating the mutation. Introduce canonical `/v1/api` endpoints while retaining the existing `/api` routes as compatibility aliases with identical authorization.
+- Support persisted one-shot due times and optional task expiry. The initial scheduling assumption is one catch-up run after downtime unless expired, with a fixed saved due time. Event-driven rescheduling and recurring reminder policy remain a follow-up discussion.
 
 ### Acceptance with a controlled clock and worker barriers
 
-1. Release two separate Go workers against one eligible task in Docker PostgreSQL. Record handler entry and durable outcomes. Expect one handler and one outcome. In another run, cancel after claim and before effect dispatch. Release the stale worker and expect zero effects and a cancelled task.
-2. Checkpoint a PDF input by its registered `fileId` and terminate the worker. Edit and register that path again. Give a second owner different bytes at the same path. Reopen the database, advance beyond lease expiry, and resume on a separate host. Verify the worker reads the first version's exact bytes by its checkpointed ID, finishes the original task, and retains the interrupted attempt. A late update carrying the old lease must have no effect.
-3. Leave one task waiting for review and queue another. The second task finishes while the first retains its review. Deliver the same decision twice and verify one transition and one recorded outcome. Restart while paused and verify that only an explicit resume makes the task eligible.
-4. Schedule a reminder for 30 minutes before a 10:00 workshop. Verify the creation response and the list read in a second session contain the same task ID and 09:30 due time in the event's zone. Restart the worker before 09:30. Verify zero claims before the deadline and one successful claim when the reminder comes due.
+1. Release two Go workers against one eligible task in Docker PostgreSQL. Expect one claim winner, handler entry, and outcome. Cancel after claim but before effect authorization; releasing the stale worker produces zero effects.
+2. Checkpoint a registered PDF, stop the worker, edit and re-register its source path, and give another owner different bytes at that path. Resume on another host after lease expiry. Read the first version's exact bytes, retain the interrupted attempt, and reject late writes from the old lease.
+3. Leave one task waiting for review while another finishes. Apply a decision twice and observe one transition. Pause a task, reject a late answer without saving it, restart the service, and verify that only explicit resume makes it eligible.
+4. Fail a safe operation repeatedly, restart during backoff, and advance the clock through two minutes. Observe a saved failure and one message in its chat. An explicit restart preserves the task ID and history. An uncertain external send is never retried automatically.
+5. Save a 09:30 reminder for a 10:00 workshop. Lose the creation response, repeat the same request key, and read the same task ID and due time from another session. Observe no claim before due; exercise catch-up and expiry independently.
+6. Finish tasks from Main chat and a side chat while the client is closed. Interrupt between outcome commit and message publication, then retry publication after a lost acknowledgement. Reopen both chats and find one correctly routed message per execution with stable result/file IDs; another owner sees neither.
+7. Use the composer Stop task button while unrelated chat work and another task are active. Only the selected task stops. Verify the button and result messages at desktop and narrow widths, preserving the draft.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `durable-tasks` covers task ownership, scheduling, checkpoints, cancellation, and recovery after a worker stops.
+- `durable-tasks`: task ownership, leases, scheduling, checkpoints, retries, controls, and restart recovery.
+- `task-chat-results`: durable conversation destinations, task-result delivery and replay, and task controls in the message input.
 
 ### Modified Capabilities
 
+- `workspace-access`: add versioned API access with compatible legacy routes and preserved authentication and preview semantics.
+
 ## Impact
 
-The API, worker, Tasks panel, and Activity view consume the same persisted task state. Bootstrap owns PDF registration and immutable reads. Document processing decides when a retry can reuse a filled copy. Connectors own external action receipts, and watches own observation delivery. Each workflow supplies its own recovery fixtures.
+Implements [issue #10](https://github.com/Ender-swe/cueia.io/issues/10), the second change in [PROPOSAL-ORDER.md](../../../PROPOSAL-ORDER.md). Affects PostgreSQL migrations, the Go API and worker, OpenAPI/generated types, the dashboard composer, conversation feed, and Tasks panel.
+
+Bootstrap supplies sessions and immutable workspace files. `build-agent-runtime` supplies model execution later; controlled handlers exercise this change independently. `build-connectors` owns real review decisions and external receipts; this change defines and tests the integration contract. `map-conversations` adopts the minimal conversation registry and task messages when adding Rich Threads and full history. Document processing owns filled-copy reuse, and watches own recurrence and observation delivery. No new broker or external model service is required for acceptance.
