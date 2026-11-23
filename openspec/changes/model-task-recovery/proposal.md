@@ -14,7 +14,7 @@ An owner should be able to leave a delegated job running, stop or pause it, and 
 - Persist a task's destination conversation at creation. Publish its result or failure exactly once per execution to that conversation, using Main chat only when no originating chat was supplied. Commit the outcome and pending delivery together, recover delivery after restart, and replay messages when the chat reopens.
 - Establish the minimum durable conversation identity and task-message read path needed for this delivery. Later conversation history adopts these IDs and message identities rather than creating another Main chat or duplicating results.
 - Save mutation responses with workspace-scoped request keys so a lost response can be replayed without repeating the mutation. Introduce canonical `/v1/api` endpoints while retaining the existing `/api` routes as compatibility aliases with identical authorization.
-- Support persisted one-shot due times and optional task expiry. The initial scheduling assumption is one catch-up run after downtime unless expired, with a fixed saved due time. Event-driven rescheduling and recurring reminder policy remain a follow-up discussion.
+- Support persisted one-shot due times and optional task expiry. An overdue reminder runs once after downtime unless expired, with a fixed saved due time. Event-driven rescheduling and recurring reminder policy remain a follow-up discussion.
 
 ### Acceptance with a controlled clock and worker barriers
 

@@ -1,0 +1,74 @@
+# Model task recovery implementation tasks
+
+Implements [issue #10](https://github.com/Ender-swe/cueia.io/issues/10). Follow the [design](design.md), [durable task requirements](specs/durable-tasks/spec.md), [chat-result requirements](specs/task-chat-results/spec.md), and [versioned access requirements](specs/workspace-access/spec.md). Keep all Go tests in the closest `test/` directory. These boxes track implementation, not completion of the planning artifacts.
+
+## 1. Domain contracts and persistence
+
+- [ ] 1.1 Define task states, execution/attempt identities, checkpoint v1, operation fingerprints, terminal outcomes, error classifications, and handler/review interfaces in `apps/server/internal/task/`, using `task.go` for domain structs and the session feature layout. Verify allowed transitions and unsupported checkpoint versions with focused tests under `internal/task/test/`.
+- [ ] 1.2 Add additive SQL migrations for `conversations`, `tasks`, `task_runs`, and `task_attempts` from the design. Verify fresh install, repeated migration, the deferred current-run relationship, one Main conversation per workspace, one open attempt per execution, and rejection of cross-workspace relationships.
+- [ ] 1.3 Add the input, operation, outcome, delivery, message, and mutation-response tables and indexes. Verify unique operation identities, one outcome/delivery/message per execution, and workspace-scoped response keys against PostgreSQL.
+- [ ] 1.4 Implement a shared authoritative clock abstraction and controlled multi-process test clock. Add worker lease/concurrency/poll configuration with validated defaults. Verify production cannot enable the test clock and invalid renewal/lease settings fail startup.
+
+## 2. Conversation destinations and replayable requests
+
+- [ ] 2.1 Implement minimal conversation identity storage in `internal/conversation/`: atomically ensure Main, create/list owned side conversations, and validate optional mail/event source bindings. Race first Main resolution and verify distinct owners retain distinct IDs.
+- [ ] 2.2 Implement transaction-scoped idempotency reservation and saved responses, including canonical request fingerprints and prefix-independent operation scopes. Verify concurrent duplicates converge, payload changes return 409, and rollback leaves no committed success response.
+- [ ] 2.3 Implement task creation with destination resolution, initial run, optional scheduling/expiry, and saved response committed together. Test that confirmation waits for commit, absent origin uses Main, explicit invalid origin is rejected, and a lost response replays the same task ID.
+- [ ] 2.4 Implement owner-scoped task list/detail reads with pagination, conversation/state/activity filters, attempts, pending inputs/reviews, outcome references, and delivery status. Verify stable pagination and denial of foreign task IDs.
+
+## 3. Worker claims and document checkpoints
+
+- [ ] 3.1 Implement conditional task claims and attempt creation under the current run/version/status/due/expiry gates in `internal/task/memory.go`. Extend the existing separate-process claim barrier test to prove one winner, one handler entry, and one outcome for a task.
+- [ ] 3.2 Implement heartbeat renewal and lease checks for every durable progress write, operation authorization, and completion. Test that expired/replaced tokens cannot update a task even if a stale handler ignores cancellation.
+- [ ] 3.3 Add bounded concurrent execution and independent heartbeats to `cmd/worker`, using a connection pool and claiming only when a slot is free. Verify a blocked handler and a waiting task do not prevent an unrelated eligible task from finishing.
+- [ ] 3.4 Wire the worker's workspace provider and document service with the same deployment/workspace configuration as the API. Implement checkpoint save/load, version dispatch, and owner validation of file/evidence IDs. Verify a task continues after its creator signs out without retaining that bearer token.
+- [ ] 3.5 Implement expired-lease recovery and graceful shutdown. Preserve interrupted attempts and original start times, resume from the last compatible checkpoint, and fail unsupported versions before effects. Verify a new host reads the original checkpointed PDF after the path is edited/re-registered and another owner uses the same path.
+
+## 4. Operation reconciliation and waiting
+
+- [ ] 4.1 Implement stable operation records and fingerprint conflicts. Reuse confirmed result/file references across attempts and explicit restarts, and reconcile operations recorded after a checkpoint. Test a stop between result publication and checkpoint storage without producing a duplicate registered output.
+- [ ] 4.2 Implement the review adapter contract with a durable controlled fixture for prepare, decision, dispatch authorization, receipt lookup, and pending-review invalidation. Verify duplicated decisions advance a task once and expiry, denial, or connection-generation changes prevent dispatch.
+- [ ] 4.3 Serialize effect authorization with lease ownership, pause, and cancellation. Test cancellation winning before authorization produces zero effects; test provider acceptance followed by response loss remains uncertain through restart and never triggers an automatic resend.
+- [ ] 4.4 Implement atomic checkpoint-and-wait transitions for input and review, releasing the lease and execution slot. Validate answers against bounded declarative schemas and the current request ID; test duplicate valid answers and unrelated task progress during a wait.
+
+## 5. Owner controls, retries, and scheduling
+
+- [ ] 5.1 Implement version-checked pause, resume, and cancel with replayable responses. Close unresolved input IDs on pause/cancel, discard late answer payloads, preserve accepted answers/progress, and reissue missing input on resume. Verify pause survives restart and an old answer remains invalid after resume.
+- [ ] 5.2 Implement completion/control race handling and pending review invalidation. Verify one terminal outcome when cancellation races completion, and verify approval received during pause cannot resume work or bypass revalidation on explicit resume.
+- [ ] 5.3 Implement transient/safe automatic retry classification, exponential backoff, persisted recovery deadline, and suspension/restoration of the remaining two-minute budget. Verify worker restart cannot reset it and a five-minute pause preserves the remaining duration.
+- [ ] 5.4 Add independent recovery-deadline and task-expiry enforcement, including stalled handlers and paused/waiting tasks. Save failure/expiry outcomes and reject late completions. Verify a healthy initial handler is not subject to the retry-only two-minute limit.
+- [ ] 5.5 Implement explicit restart of failed/expired tasks under the same task ID with a new execution, preserved history/operation receipts, and fresh retry budget. Require a valid replacement/cleared expiry and reject restart of succeeded/cancelled tasks. Verify duplicate restart requests create one execution.
+- [ ] 5.6 Implement persisted one-shot scheduling and a reminder handler. Preserve the due instant and zone independently of retry backoff; reject ambiguous/inconsistent time inputs. Verify zero early claims, one catch-up execution after downtime unless expired, and a source event edit leaves the saved time unchanged.
+
+## 6. Terminal outcomes and chat delivery
+
+- [ ] 6.1 Commit each terminal outcome and its preallocated message/delivery identity with the run's terminal transition. Verify failures, successes, cancellation, and expiry all have an immutable outcome and recoverable intent, with no terminal state committed alone.
+- [ ] 6.2 Implement a transactional local delivery dispatcher with retry backoff, stable message IDs, and duplicate-outcome protection. Interrupt after outcome commit and after publication commit; verify retries yield one message and never rerun the task or alter its outcome.
+- [ ] 6.3 Implement owner-scoped ordered/paginated task-message reads that resolve the saved outcome and stable result/file references. Test Main fallback, explicit side-chat delivery, cross-owner denial, and distinct messages for a failed execution and its successful restart.
+- [ ] 6.4 Expose pending publication in task detail and link Tasks/Activity to the same saved chat outcome. Record task, run, attempt, operation, and delivery IDs in safe diagnostics, including lease loss, retry exhaustion, and oldest pending delivery; verify logs omit answer bodies and credentials.
+
+## 7. HTTP routes, versioning, and deployment
+
+- [ ] 7.1 Add thin task and conversation handlers with bounded input validation and documented error codes. Register relative feature paths in `cmd/api/routes/tasks.go` and `conversations.go`, including authenticated controls and reads; keep review callbacks internal. Test ownership, stale versions, invalid keys, and oversized input through routes.
+- [ ] 7.2 Mount canonical `/v1/api` and compatible `/api` handlers. Update session exchange protection and preview URL generation while preserving previously issued preview links. Verify cross-prefix sign-in/revocation, shared rate limits, origin policy, and idempotent request replay.
+- [ ] 7.3 Extend OpenAPI for tasks, controls, conversations, task messages, pagination, limits, and compatibility aliases. Regenerate `packages/api-types` and verify the contract check and representative error/response shapes.
+- [ ] 7.4 Update dashboard API configuration, development proxy, deployment health checks, and API/worker environment wiring for the canonical prefix and shared workspace access. Verify Compose still gates both services on successful migration and a failed migration admits no task execution.
+
+## 8. Dashboard task controls and result messages
+
+Read `DESIGN.md` and use `.agents/skills/uncodixfy/SKILL.md` before frontend implementation. Reuse existing UI primitives and pane behavior.
+
+- [ ] 8.1 Replace authenticated Main/local side-chat identity handling with the minimal durable conversation registry. Preserve drafts by conversation ID, register side chats before delegation, and reload owned destinations without implementing the later general chat-history runtime.
+- [ ] 8.2 Load, refresh, and render persisted task messages in `conversation-feed`, deduplicated by message ID. Show results/failures in their saved destination, acquire fresh document preview links, and verify switching chats does not reroute a completion.
+- [ ] 8.3 Add a visible accessible Stop task control to the associated message input, explicitly bound to a selected task when several exist. Handle pending/error/replayed responses, preserve the draft, and keep ordinary chat-turn cancellation separate. Verify only the selected task stops.
+- [ ] 8.4 Populate Scheduled tasks and Today's activity from persisted data and add task detail with input/review state, attempts, Pause, Resume, and eligible Start again controls. Link to the saved result/chat and show pending result publication distinctly.
+- [ ] 8.5 Add focused Playwright acceptance for Main and side-chat results after closing/reopening the client, one completion after delivery retry, failed-then-restarted task history, Stop task isolation, and narrow-screen keyboard/draft preservation. Keep fictional expected results independently authored and record fixture provenance.
+
+## 9. Integrated acceptance and handoff
+
+- [ ] 9.1 Run the proposal's competing-worker and cancellation barriers against Docker PostgreSQL, including lease renewal/loss, a stalled retry, and late completion. Use clock/barrier control instead of timing sleeps; verify no leaked active attempts or duplicate outcomes.
+- [ ] 9.2 Run the PDF/version recovery journey across worker/API restart and separate host storage access, then reopen its result from another session after preview expiry. Verify original bytes, owner isolation, unchanged task ID, and retained attempt history.
+- [ ] 9.3 Run reminder creation with lost-response replay, pre-due restart, overdue catch-up, and task expiry. Run wait/pause/late-answer and duplicate-review cases, including uncertain provider acceptance, and compare persisted states with the numbered spec scenarios.
+- [ ] 9.4 Run terminal chat publication fault injection with the client closed, duplicate dispatcher passes, and reopening Main/side chats. Verify one message per execution and no data crossing workspaces.
+- [ ] 9.5 Document worker configuration, handler/checkpoint compatibility, task restart behavior, additive deployment/rollback, and integration boundaries for `build-agent-runtime`, `build-connectors`, and `map-conversations`. Update those proposals' handoff references to adopt conversation IDs and message/operation deduplication contracts without marking their implementations complete.
+- [ ] 9.6 Run the affected Go and browser suites, generated-contract check, and root build/type-check/test tasks. Run `openspec validate model-task-recovery --strict`, record acceptance evidence and any environment limits, and only then mark implementation tasks complete.
