@@ -64,6 +64,8 @@ The dashboard SHALL load task messages for the selected conversation, refresh th
 
 The associated message input SHALL expose a visible, keyboard-accessible Stop task button identifying the selected active task. It SHALL invoke durable cancellation for that task ID and show the committed response or request error. It SHALL preserve the draft and unrelated tasks. Stopping an ordinary chat turn SHALL retain its separate lifecycle and SHALL NOT implicitly cancel delegated tasks. Pause, Resume, and eligible Start again SHALL be available in task detail.
 
+Owner controls SHALL bind to the selected execution number and version and retain their original idempotency key and payload on ambiguous network retries. A conflict SHALL refresh task state without automatically retargeting the control at a newer execution. A replayed response for an earlier execution SHALL NOT mark the current execution stopped.
+
 #### Scenario: Stop one of several tasks
 
 1. **WHEN** two tasks are active and the owner presses Stop task for the selected Workshop summary
@@ -73,3 +75,8 @@ The associated message input SHALL expose a visible, keyboard-accessible Stop ta
 
 1. **WHEN** the owner opens the task-associated composer at a narrow viewport and the cancellation request fails before commit
 2. **THEN** Stop task remains reachable by keyboard, the interface shows an actionable error without falsely declaring cancellation, and retrying with the same request key is safe.
+
+#### Scenario: Control response belongs to an earlier execution
+
+1. **WHEN** a delayed control for execution 1 conflicts after execution 2 starts, or an earlier saved control response is replayed after that restart
+2. **THEN** the interface refreshes the current task state, leaves execution 2 active, preserves the draft, and requires an explicit new action to control execution 2.

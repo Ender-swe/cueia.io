@@ -4,6 +4,8 @@
 
 The API SHALL expose canonical `/v1/api` routes and retain `/api` compatibility aliases for existing clients. Both prefixes SHALL use the same feature handlers, origin policy, rate limiting, session exchange and revocation semantics, workspace authorization, and mutation idempotency scope. Newly generated clients and preview links SHALL use the canonical prefix. Existing signed preview links SHALL remain valid until their original expiry. API versioning SHALL NOT substitute for versioning persisted task checkpoints.
 
+Both prefixes SHALL allow `Idempotency-Key` alongside `Authorization` and `Content-Type` in CORS preflight responses for the existing authorized origin. This SHALL NOT broaden the set of allowed origins. Browser retries after an ambiguous network failure SHALL retain the original key and payload, including expected execution/version, rather than silently issuing a new mutation.
+
 #### Scenario: Exchange and revoke across prefixes
 
 1. **WHEN** Alice exchanges a valid Clerk session through `/v1/api/session`
@@ -29,3 +31,12 @@ The API SHALL expose canonical `/v1/api` routes and retain `/api` compatibility 
 
 1. **WHEN** a developer regenerates TypeScript API types from the OpenAPI contract
 2. **THEN** the canonical versioned task, conversation, and existing workspace routes have documented request, response, pagination, and error schemas, and compatibility aliases are identified in the contract.
+
+#### Scenario: Cross-origin browser retries a lost response
+
+1. **WHEN** the authorized cross-origin browser preflights a task mutation with `Idempotency-Key`, `Authorization`, and `Content-Type` through either prefix
+2. **THEN** the preflight permits those headers and the authenticated mutation can proceed.
+3. **WHEN** task creation commits through one prefix, its response is lost, and the browser retries the same key and payload through the other
+4. **THEN** it receives the original task ID with one saved task and execution.
+5. **WHEN** a disallowed origin attempts the same preflight or mutation
+6. **THEN** it is rejected without changing task state.
