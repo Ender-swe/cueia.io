@@ -18,28 +18,30 @@ The system SHALL maintain one durable Main conversation per workspace and stable
 3. **WHEN** Bob supplies that conversation ID to create a task
 4. **THEN** creation is denied without saving a task or revealing Alice's messages.
 
-### Requirement: Commit a terminal outcome with recoverable delivery
+### Requirement: Read the committed outcome as the chat message
 
-Each task execution SHALL commit its terminal state, immutable outcome, and pending chat delivery together. Success and failure messages SHALL use the task's saved destination; cancellation and task expiry SHALL also have persisted terminal messages. The message SHALL reference the task ID, execution, and stable result/evidence IDs. A publication failure SHALL leave the task outcome intact and delivery pending.
+A terminal transition SHALL commit the execution state and exactly one immutable outcome together. The outcome SHALL identify the task, execution, final status, safe message, and any stable result or evidence IDs. Its ID SHALL be the stable chat message ID. Authenticated reads of the task's saved conversation, Tasks, and Activity SHALL expose that same record immediately after commit for success, failure, cancellation, and expiry.
 
-#### Scenario: Crash after outcome commit
+#### Scenario: Worker crashes at commit
 
-1. **WHEN** a worker commits a successful outcome and pending delivery, then stops before publication while the client is closed
-2. **THEN** restarting the dispatcher publishes the outcome to the saved originating chat, and reopening that chat shows it.
+1. **WHEN** the worker dies before its terminal transaction commits
+2. **THEN** neither a terminal state nor a chat message is visible, and the task is eligible for normal lease recovery.
+3. **WHEN** the transaction instead commits but the acknowledgement is lost and the worker stops while the client is closed
+4. **THEN** a second session can read the outcome immediately with workers offline. Chat, Tasks, and Activity return the same ID. Restarting the worker adds no second outcome.
 
-#### Scenario: Publication is temporarily unavailable
+#### Scenario: Stop wins the completion race
 
-1. **WHEN** a task finishes but message publication repeatedly fails
-2. **THEN** task detail shows its completed outcome and pending delivery, the pending intent survives restart, and the task is not re-executed or failed merely because delivery is delayed.
+1. **WHEN** the owner stops a task after its replacement worker claims it and both that worker and its predecessor later submit completion
+2. **THEN** the originating chat contains one cancellation for the execution, and both late completions are rejected.
 
-### Requirement: Publish once per execution and replay saved messages
+### Requirement: Replay outcomes across executions and sessions
 
-Publication SHALL use a preallocated stable message identity and deduplicate by terminal outcome. Repeated dispatch or a lost publication acknowledgement SHALL yield one visible message per execution. A manual restart SHALL retain earlier messages and publish a distinct message for its new execution. Authenticated conversation reads SHALL replay ordered, paginated task messages across sessions and restarts without duplicating them in the client.
+Conversation reads SHALL return the owner's task outcomes for the saved conversation in stable, paginated order. Repeated fetches SHALL identify each outcome by its original ID. An explicit restart SHALL retain the earlier outcome and allow the new execution to record its own message under the same task ID.
 
-#### Scenario: Lost publication acknowledgement
+#### Scenario: Repeat a read on reopening
 
-1. **WHEN** publication commits but its acknowledgement is lost, and two dispatcher passes retry the same intent
-2. **THEN** the destination contains one message with the original message ID and outcome.
+1. **WHEN** the owner reopens a side chat, pages through results with the same timestamp, and refreshes the feed
+2. **THEN** every result appears once in stable order with its original ID and the same referenced files.
 
 #### Scenario: Failure followed by explicit restart
 
@@ -48,7 +50,7 @@ Publication SHALL use a preallocated stable message identity and deduplicate by 
 
 #### Scenario: Reopen a file result
 
-1. **WHEN** a task publishes a registered PDF result, its original preview URL expires, and the owner reopens the chat in a second session
+1. **WHEN** a task finishes with a registered PDF reference, its original preview URL expires, and the owner reopens the chat in a second session
 2. **THEN** the message retains the same file ID and obtains a fresh authorized preview for the original version's bytes.
 
 ### Requirement: Show task results in their chat and task views

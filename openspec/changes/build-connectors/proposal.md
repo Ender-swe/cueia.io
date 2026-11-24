@@ -20,11 +20,14 @@ Persist one review per logical action, whether initiated by chat, a task, or the
 
 Resolve decisions atomically. Re-read ownership, grant, expiry, connection generation, payload fingerprint, task eligibility, and target version before dispatch. Only the winner of the transition to executing may call the adapter. Repeated requests return the saved decision or in-progress state. Persist denial, expiry, confirmed success and provider ID, definitive failure, or uncertain delivery. If the connection drops after dispatch, expose uncertainty and withhold automatic retries. Surface the receipt in Activity and to the waiting task.
 
+Introduce approval waits with the first reviewed send from a delegated task. Repeating preparation after response loss must return the same review for the same action and payload. Recover saved decisions or expiry even if a notification is lost. Resume an eligible execution once, revalidate on explicit resume from pause, and close pending reviews on cancellation. If the sender stops after dispatch authorization, reconcile the receipt before sending again, including on explicit task restart. Reuse confirmed success and report an inconclusive lookup as uncertain. A new dispatch requires proof that the previous authorization never executed and can no longer execute. [Task recovery boundary](../model-task-recovery/proposal.md#impact)
+
 ### Acceptance
 
 1. Open the sample workshop from the adapter. Compare its thread, message, attachment, and event IDs with the owner's snapshot. Prepare a draft with an ordinary PDF from Files. Record its reviewed `fileId`, edit and register the source again, and verify it gets a different ID. Restart the API and approve concurrently from two sessions. Expect one provider invocation, one outgoing message with the first version's exact bytes, and one receipt. Reopen the receipt by action ID. Deny a second draft and verify it remains unsent.
 2. Prepare a calendar update for an all-day event covering June 9 with an exclusive June 10 end. Change its stored version before approval. Expect a conflict, no provider mutation, and unchanged date semantics in the review.
 3. Prepare a reply under account A, disconnect, and reconnect as B. The old review cannot send through B. Repeat after expiry and with read-only grants. Simulate a provider that accepts a send and loses the response. A duplicate approval must return the uncertain outcome with no second invocation.
+4. Lose a task's review-creation response and its approval notification. Recover one review and one continuation. In separate runs, kill the sender immediately after authorization and immediately after provider acceptance, before receipt storage. Reopen the task and verify that a missing receipt alone causes zero resends, including after Start again. A late receipt remains evidence even if the task has since been cancelled.
 
 ## Capabilities
 
