@@ -3,17 +3,21 @@ package database_test
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"os"
 	"testing"
+	"testing/fstest"
 
 	"github.com/Ender-swe/cueia.io/apps/server/internal/config"
 	"github.com/Ender-swe/cueia.io/apps/server/internal/database"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // Point CUEIA_TEST_DATABASE_URL at an empty, disposable PostgreSQL database.
-func TestBootstrapMigration(t *testing.T) {
+func migrationConnection(t *testing.T) *pgx.Conn {
+	t.Helper()
 	url := config.TestDatabaseURL()
 	if url == "" {
 		t.Skip("requires CUEIA_TEST_DATABASE_URL")
@@ -23,10 +27,39 @@ func TestBootstrapMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer conn.Close(ctx)
+	t.Cleanup(func() { conn.Close(ctx) })
+	schema := pgx.Identifier{"migration_" + uuid.NewString()}.Sanitize()
+	if _, err := conn.Exec(ctx, "CREATE SCHEMA "+schema); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if _, err := conn.Exec(ctx, "DROP SCHEMA "+schema+" CASCADE"); err != nil {
+			t.Error(err)
+		}
+	})
+	if _, err := conn.Exec(ctx, "SET search_path TO "+schema); err != nil {
+		t.Fatal(err)
+	}
+	return conn
+}
+
+func bootstrapMigration(t *testing.T, dir fs.FS) fs.FS {
+	t.Helper()
+	const name = "001_workspace.sql"
+	sql, err := fs.ReadFile(dir, name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return fstest.MapFS{name: &fstest.MapFile{Data: sql}}
+}
+
+func TestBootstrapMigration(t *testing.T) {
+	ctx := context.Background()
+	conn := migrationConnection(t)
 	dir := config.MigrationsDir("../../../migrations")
+	bootstrap := bootstrapMigration(t, os.DirFS(dir))
 	for range 2 {
-		if err := database.Migrate(ctx, conn, os.DirFS(dir)); err != nil {
+		if err := database.Migrate(ctx, conn, bootstrap); err != nil {
 			t.Fatal(err)
 		}
 	}
